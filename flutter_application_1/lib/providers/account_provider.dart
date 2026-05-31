@@ -9,7 +9,9 @@ class AccountProvider with ChangeNotifier {
   double? _maxPrice;
   AccountStatus _statusFilter = AccountStatus.available;
 
-  List<GameAccount> get accounts {
+  List<GameAccount> get accounts => _accounts;
+
+  List<GameAccount> get filteredAccounts {
     return _accounts.where((account) {
       final matchesSearch =
           account.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||

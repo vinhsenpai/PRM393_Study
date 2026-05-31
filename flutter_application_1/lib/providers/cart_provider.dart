@@ -3,7 +3,20 @@ import '../models/cart_item.dart';
 import '../models/account.dart';
 
 class CartProvider with ChangeNotifier {
-  final Map<String, CartItem> _items = {};
+  final Map<String, CartItem> _items = {
+    '1': CartItem(
+      id: 'dummy_1',
+      account: GameAccount.dummyAccounts[0],
+      quantity: 1,
+    ),
+    '2': CartItem(
+      id: 'dummy_2',
+      account: GameAccount.dummyAccounts[1],
+      quantity: 1,
+    ),
+  };
+
+  CartProvider();
 
   Map<String, CartItem> get items => {..._items};
 
@@ -30,10 +43,7 @@ class CartProvider with ChangeNotifier {
     } else {
       _items.putIfAbsent(
         account.id,
-        () => CartItem(
-          id: DateTime.now().toString(),
-          account: account,
-        ),
+        () => CartItem(id: DateTime.now().toString(), account: account),
       );
     }
     notifyListeners();

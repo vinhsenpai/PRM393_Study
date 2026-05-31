@@ -76,5 +76,17 @@ class GameAccount {
       specs: {'Level': '75', 'Tier': 'Conqueror', 'Skins': '50+'},
       createdAt: DateTime.now().subtract(const Duration(days: 5)),
     ),
+    GameAccount(
+      id: '4',
+      title: 'Valorant Account - Immortal Rank',
+      gameName: 'Valorant',
+      price: 1200000,
+      status: AccountStatus.reserved, // Pending
+      description: 'Immortal rank account with many premium skins.',
+      sellerName: 'ViperMain',
+      imageUrls: ['https://picsum.photos/id/30/800/600'],
+      specs: {'Level': '120', 'Rank': 'Immortal', 'Skins': '30+'},
+      createdAt: DateTime.now().subtract(const Duration(hours: 5)),
+    ),
   ];
 }

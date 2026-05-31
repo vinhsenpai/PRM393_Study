@@ -145,6 +145,8 @@ class AccountDetailScreen extends StatelessWidget {
   }
 
   Widget _buildBottomActions(BuildContext context) {
+    final cart = context.watch<CartProvider>();
+    final isInCart = cart.items.containsKey(account.id);
     final isAvailable = account.status == AccountStatus.available;
 
     return Container(
@@ -179,22 +181,32 @@ class AccountDetailScreen extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             flex: 2,
-            child: ElevatedButton(
-              onPressed: isAvailable
-                  ? () {
-                      context.read<CartProvider>().addItem(account);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Added to cart')),
-                      );
-                    }
-                  : null,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: isAvailable
-                    ? Theme.of(context).primaryColor
-                    : Colors.grey,
-              ),
-              child: Text(isAvailable ? 'Add to Cart' : 'Not Available'),
-            ),
+            child: isInCart
+                ? ElevatedButton.icon(
+                    onPressed: null,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.grey[200],
+                      foregroundColor: Colors.grey[600],
+                    ),
+                    icon: const Icon(Icons.check_circle_outline),
+                    label: const Text('Already in Cart'),
+                  )
+                : ElevatedButton(
+                    onPressed: isAvailable
+                        ? () {
+                            context.read<CartProvider>().addItem(account);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Added to cart')),
+                            );
+                          }
+                        : null,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: isAvailable
+                          ? Theme.of(context).primaryColor
+                          : Colors.grey,
+                    ),
+                    child: Text(isAvailable ? 'Add to Cart' : 'Not Available'),
+                  ),
           ),
         ],
       ),

@@ -7,7 +7,7 @@ import 'providers/auth_provider.dart';
 import 'screens/login_screen.dart';
 import 'screens/buyer_home_screen.dart';
 import 'screens/seller_home_screen.dart';
-import 'screens/admin_home_screen.dart';
+import 'screens/admin_dashboard_screen.dart';
 import 'models/user.dart';
 
 void main() {
@@ -38,7 +38,7 @@ class GameAcctHubApp extends StatelessWidget {
           // Route based on role
           switch (auth.currentUser?.role) {
             case UserRole.admin:
-              return const AdminHomeScreen();
+              return const AdminDashboardScreen();
             case UserRole.seller:
               return const SellerHomeScreen();
             case UserRole.buyer:

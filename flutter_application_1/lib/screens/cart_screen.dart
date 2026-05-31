@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../providers/cart_provider.dart';
 import 'checkout_screen.dart';
+import 'account_detail_screen.dart';
 
 class CartScreen extends StatelessWidget {
   const CartScreen({super.key});
@@ -29,6 +30,15 @@ class CartScreen extends StatelessWidget {
                           vertical: 6,
                         ),
                         child: ListTile(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    AccountDetailScreen(account: item.account),
+                              ),
+                            );
+                          },
                           leading: ClipRRect(
                             borderRadius: BorderRadius.circular(4),
                             child: Image.network(
