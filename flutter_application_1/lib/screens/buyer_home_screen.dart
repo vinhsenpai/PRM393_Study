@@ -6,6 +6,7 @@ import '../providers/account_provider.dart';
 import 'cart_screen.dart';
 import 'chat_screen.dart';
 import 'purchased_items_screen.dart';
+import 'notifications_screen.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 class BuyerHomeScreen extends StatelessWidget {
@@ -15,14 +16,28 @@ class BuyerHomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('GameAcctHub'),
+        title: const Text('Game Marketplace'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.shopping_cart),
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const CartScreen()),
+            icon: const Badge(
+              label: Text('2'),
+              child: Icon(Icons.notifications_none_rounded),
             ),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.shopping_cart_outlined),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const CartScreen()),
+              );
+            },
           ),
         ],
       ),

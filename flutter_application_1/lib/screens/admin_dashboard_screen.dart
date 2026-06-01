@@ -8,6 +8,7 @@ import 'admin_account_detail_screen.dart';
 import 'admin_user_detail_screen.dart';
 import 'admin_report_screen.dart';
 import 'admin_chat_screen.dart';
+import 'notifications_screen.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -35,6 +36,21 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
       appBar: AppBar(
         title: const Text('Admin Panel'),
         elevation: 2,
+        actions: [
+          IconButton(
+            icon: const Badge(
+              label: Text('3'),
+              child: Icon(Icons.notifications_none_rounded),
+            ),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+              );
+            },
+          ),
+          const SizedBox(width: 8),
+        ],
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,
