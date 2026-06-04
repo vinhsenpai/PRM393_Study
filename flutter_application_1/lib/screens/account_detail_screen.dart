@@ -168,7 +168,7 @@ class AccountDetailScreen extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                     builder: (context) =>
-                        ChatScreen(otherUser: account.sellerName),
+                        ChatScreen.otherUser(otherUser: account.sellerName),
                   ),
                 );
               },

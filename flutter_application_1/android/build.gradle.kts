@@ -24,3 +24,16 @@ subprojects {
 tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
 }
+
+subprojects {
+    configurations.all {
+        resolutionStrategy.eachDependency {
+            if (requested.group == "androidx.core") {
+                useVersion("1.13.1")
+            }
+            if (requested.group == "androidx.activity") {
+                useVersion("1.8.2")
+            }
+        }
+    }
+}

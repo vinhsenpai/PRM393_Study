@@ -49,7 +49,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatScreen(otherUser: 'Support Center')));
+          Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatScreen(
+            buyerId: 'admin', 
+            sellerId: 'support', 
+            productId: 'support_product',
+            productTitle: 'Support Chat'
+          )));
         },
         child: const Icon(Icons.chat),
       ),

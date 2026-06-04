@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
+import '../models/user.dart';
 import 'seller_dashboard_screen.dart';
 
 class SellerHomeScreen extends StatelessWidget {
@@ -8,6 +9,8 @@ class SellerHomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+    
     return Scaffold(
       appBar: AppBar(title: const Text('Seller Center')),
       drawer: _buildDrawer(context),
@@ -18,7 +21,12 @@ class SellerHomeScreen extends StatelessWidget {
             _buildStatGrid(),
             const SizedBox(height: 24),
             ElevatedButton.icon(
-              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SellerDashboardScreen())),
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => SellerDashboardScreen(sellerId: auth.currentUser?.id ?? ''),
+                ),
+              ),
               icon: const Icon(Icons.manage_accounts),
               label: const Text('Manage My Listings'),
               style: ElevatedButton.styleFrom(minimumSize: const Size(double.infinity, 50)),
