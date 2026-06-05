@@ -21,12 +21,26 @@ class SellerHomeScreen extends StatelessWidget {
             _buildStatGrid(),
             const SizedBox(height: 24),
             ElevatedButton.icon(
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => SellerDashboardScreen(sellerId: auth.currentUser?.id ?? ''),
-                ),
-              ),
+              onPressed: () {
+                final sellerId = auth.currentUser?.id ?? '';
+                if (sellerId.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Seller id is not ready yet. Please try again.',
+                      ),
+                    ),
+                  );
+                  return;
+                }
+
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => SellerDashboardScreen(sellerId: sellerId),
+                  ),
+                );
+              },
               icon: const Icon(Icons.manage_accounts),
               label: const Text('Manage My Listings'),
               style: ElevatedButton.styleFrom(minimumSize: const Size(double.infinity, 50)),
