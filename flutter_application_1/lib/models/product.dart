@@ -1,7 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-enum ProductStatus { available, reserved, sold, hidden }
-
 class Product {
   final String id;
   final String sellerId;
@@ -29,19 +27,20 @@ class Product {
     required this.updatedAt,
   });
 
-  factory Product.fromDocument(Map<String, dynamic> doc) {
+  factory Product.fromDocument(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
     return Product(
-      id: doc['id'] as String,
-      sellerId: doc['sellerId'] as String,
-      title: doc['title'] as String,
-      description: doc['description'] as String,
-      game: doc['game'] as String,
-      price: (doc['price'] as num).toDouble(),
-      imageUrls: List<String>.from(doc['imageUrls'] ?? []),
-      tags: List<String>.from(doc['tags'] ?? []),
-      stockStatus: _parseProductStatus(doc['stockStatus']),
-      createdAt: (doc['createdAt'] as Timestamp).toDate(),
-      updatedAt: (doc['updatedAt'] as Timestamp).toDate(),
+      id: doc.id,
+      sellerId: data['sellerId'] as String? ?? '',
+      title: data['title'] as String? ?? '',
+      description: data['description'] as String? ?? '',
+      game: data['game'] as String? ?? '',
+      price: (data['price'] as num?)?.toDouble() ?? 0.0,
+      imageUrls: List<String>.from(data['imageUrls'] ?? []),
+      tags: List<String>.from(data['tags'] ?? []),
+      stockStatus: _parseProductStatus(data['stockStatus']),
+      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      updatedAt: (data['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }
 
@@ -65,7 +64,6 @@ class Product {
 
   Map<String, dynamic> toDocument() {
     return {
-      'id': id,
       'sellerId': sellerId,
       'title': title,
       'description': description,
@@ -79,3 +77,5 @@ class Product {
     };
   }
 }
+
+enum ProductStatus { available, reserved, sold, hidden }

@@ -25,7 +25,7 @@ class ProductService {
     try {
       final doc = await _products.doc(productId).get();
       if (doc.exists) {
-        return Product.fromDocument(doc.data() as Map<String, dynamic>);
+        return Product.fromDocument(doc);
       }
       return null;
     } catch (e) {
@@ -58,7 +58,7 @@ class ProductService {
         .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snapshot) => snapshot.docs
-            .map((doc) => Product.fromDocument(doc.data() as Map<String, dynamic>))
+            .map((doc) => Product.fromDocument(doc))
             .toList());
   }
 
@@ -69,7 +69,7 @@ class ProductService {
         .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snapshot) => snapshot.docs
-            .map((doc) => Product.fromDocument(doc.data() as Map<String, dynamic>))
+            .map((doc) => Product.fromDocument(doc))
             .toList());
   }
 

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import '../models/product.dart';
+import '../services/product_service.dart';
+import '../widgets/product_card.dart';
+import '../theme/app_theme.dart';
 import '../providers/auth_provider.dart';
-import '../widgets/account_card.dart';
-import '../providers/account_provider.dart';
 import 'cart_screen.dart';
 
 class BuyerHomeScreen extends StatelessWidget {
@@ -10,6 +11,8 @@ class BuyerHomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ProductService productService = ProductService();
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('GameAcctHub'),
@@ -25,12 +28,27 @@ class BuyerHomeScreen extends StatelessWidget {
         children: [
           _buildHero(),
           Expanded(
-            child: Consumer<AccountProvider>(
-              builder: (context, provider, _) {
+            child: StreamBuilder<List<Product>>(
+              stream: productService.getAllProducts(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return const Center(child: Text('No products available'));
+                }
                 return ListView.builder(
                   padding: const EdgeInsets.all(8),
-                  itemCount: provider.accounts.length,
-                  itemBuilder: (context, index) => AccountCard(account: provider.accounts[index]),
+                  itemCount: snapshot.data!.length,
+                  itemBuilder: (context, index) {
+                    final product = snapshot.data![index];
+                    return ProductCard(
+                      product: product,
+                      onTap: () {
+                        // TODO: Navigate to product detail screen
+                      },
+                    );
+                  },
                 );
               },
             ),
@@ -60,13 +78,12 @@ class BuyerHomeScreen extends StatelessWidget {
   }
 
   Widget _buildDrawer(BuildContext context) {
-    final auth = context.read<AuthProvider>();
     return Drawer(
       child: ListView(
         children: [
           UserAccountsDrawerHeader(
-            accountName: Text(auth.currentUser?.name ?? 'User'),
-            accountEmail: Text(auth.currentUser?.email ?? ''),
+            accountName: Text('User'),
+            accountEmail: Text(''),
             currentAccountPicture: const CircleAvatar(child: Icon(Icons.person)),
           ),
           ListTile(
@@ -83,7 +100,7 @@ class BuyerHomeScreen extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.logout, color: Colors.red),
             title: const Text('Logout'),
-            onTap: () => auth.logout(),
+            onTap: () {},
           ),
         ],
       ),
