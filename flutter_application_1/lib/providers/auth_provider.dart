@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
+
 import '../models/user.dart';
+import '../services/auth_service.dart';
 
 class AuthProvider with ChangeNotifier {
+  AuthProvider({AuthService? authService}) : _authService = authService ?? AuthService();
+
+  final AuthService _authService;
+
   User? _currentUser;
 
   User? get currentUser => _currentUser;
@@ -15,7 +21,7 @@ class AuthProvider with ChangeNotifier {
   Future<void> login(String email, String password) async {
     // Demo login logic
     await Future.delayed(const Duration(seconds: 1));
-    
+
     // Default to buyer for demo, or based on email
     UserRole role = UserRole.buyer;
     if (email.contains('admin')) {
@@ -44,8 +50,37 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  void logout() {
+  Future<void> signInWithGoogle() async {
+    final userCredential = await _authService.loginWithGoogle();
+    await _authService.createOrUpdateUserInFirestore(userCredential);
+
+    final fbUser = userCredential.user;
+    final uid = fbUser?.uid;
+    if (uid == null) {
+      throw StateError('FirebaseAuth user is null after Google sign-in.');
+    }
+
+    final roleStr = await _authService.getUserRole(uid);
+    final role = switch (roleStr) {
+      'admin' => UserRole.admin,
+      'seller' => UserRole.seller,
+      _ => UserRole.buyer,
+    };
+
+    _currentUser = User(
+      id: uid,
+      email: fbUser?.email ?? '',
+      name: fbUser?.displayName ?? (fbUser?.email?.split('@').first.toUpperCase() ?? 'USER'),
+      role: role,
+    );
+
+    notifyListeners();
+  }
+
+  Future<void> logout() async {
+    await _authService.signOut();
     _currentUser = null;
     notifyListeners();
   }
 }
+

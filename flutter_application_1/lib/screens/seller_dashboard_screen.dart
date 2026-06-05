@@ -14,9 +14,9 @@ import '../widgets/conversation_tile.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SellerDashboardScreen extends StatefulWidget {
-  final String sellerId;
+  final String? sellerId;
 
-  const SellerDashboardScreen({super.key, required this.sellerId});
+  const SellerDashboardScreen({super.key, this.sellerId});
 
   @override
   State<SellerDashboardScreen> createState() => _SellerDashboardScreenState();
@@ -26,8 +26,12 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
   final ProductService _productService = ProductService();
   final ChatService _chatService = ChatService();
 
+  String get _sellerIdOrEmpty => widget.sellerId ?? '';
+
   @override
   Widget build(BuildContext context) {
+    final sellerId = _sellerIdOrEmpty;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Seller Dashboard'),
@@ -38,27 +42,25 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
             onPressed: () => Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => CreateListingScreen(sellerId: widget.sellerId),
+                builder: (_) => CreateListingScreen(sellerId: sellerId),
               ),
             ),
           ),
         ],
       ),
       body: RefreshIndicator(
-        onRefresh: () => Future.value(), // Refresh handled by streams
+        onRefresh: () => Future.value(),
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Stats Cards using Streams
               StreamBuilder<List<Product>>(
-                stream: _productService.getProductsBySeller(widget.sellerId),
+                stream: _productService.getProductsBySeller(sellerId),
                 builder: (context, productSnapshot) {
                   return StreamBuilder<List<Map<String, dynamic>>>(
-                    stream: _chatService.getChatsForUser(widget.sellerId),
+                    stream: _chatService.getChatsForUser(sellerId),
                     builder: (context, chatSnapshot) {
-                      // Calculate stats
                       int totalProducts = productSnapshot.data?.length ?? 0;
                       int activeListings = 0;
                       bool hasProductData = productSnapshot.data != null;
@@ -69,7 +71,7 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
                       }
                       int totalConversations =
                           chatSnapshot.data?.length ?? 0;
-                      
+
                       return Row(
                         children: [
                           _buildStatCard(
@@ -99,8 +101,7 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
                 },
               ),
               const SizedBox(height: 24),
-              
-              // Quick Actions
+
               const Text(
                 'Quick Actions',
                 style: TextStyle(
@@ -119,7 +120,7 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
                       () => Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => CreateListingScreen(sellerId: widget.sellerId),
+                          builder: (_) => CreateListingScreen(sellerId: sellerId),
                         ),
                       ),
                     ),
@@ -132,7 +133,7 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
                       () => Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => SellerMessagesScreen(sellerId: widget.sellerId),
+                          builder: (_) => SellerMessagesScreen(sellerId: sellerId),
                         ),
                       ),
                     ),
@@ -140,8 +141,7 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
                 ],
               ),
               const SizedBox(height: 24),
-              
-              // Recent Products
+
               const Text(
                 'Recent Products',
                 style: TextStyle(
@@ -152,8 +152,9 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
               ),
               const SizedBox(height: 16),
               StreamBuilder<List<Product>>(
-                stream: _productService.getProductsBySeller(widget.sellerId)
-                    .map((products) => products.take(4).toList()), // Show last 4
+                stream: _productService
+                    .getProductsBySeller(sellerId)
+                    .map((products) => products.take(4).toList()),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const SizedBox(
@@ -173,12 +174,11 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
                         return ProductCard(
                           product: snapshot.data![index],
                           onTap: () {
-                            // Navigate to edit product
                             Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (_) => EditListingScreen(
-                                  sellerId: widget.sellerId,
+                                  sellerId: sellerId,
                                   productId: snapshot.data![index].id,
                                   initialProduct: snapshot.data![index],
                                 ),
@@ -192,8 +192,7 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
                 },
               ),
               const SizedBox(height: 24),
-              
-              // Recent Conversations
+
               const Text(
                 'Recent Conversations',
                 style: TextStyle(
@@ -204,7 +203,7 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
               ),
               const SizedBox(height: 16),
               StreamBuilder<List<Map<String, dynamic>>>(
-                stream: _chatService.getChatsForUser(widget.sellerId),
+                stream: _chatService.getChatsForUser(sellerId),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const SizedBox(
@@ -225,13 +224,11 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
                         leadingText: conv['buyerName'] ?? 'Unknown Buyer',
                         subtitleText: conv['lastMessage'] ?? 'No messages',
                         trailingText: DateFormat.jm().format(
-                          (conv['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+                          (conv['updatedAt'] as Timestamp?)?.toDate() ??
+                              DateTime.now(),
                         ),
-                        unreadCount: 0, // We'd need to calculate this properly
-                        onTap: () {
-                          // Navigate to chat screen
-                          // We would need the actual chatId and product info here
-                        },
+                        unreadCount: 0,
+                        onTap: () {},
                       );
                     },
                   );
@@ -244,7 +241,12 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
     );
   }
 
-  Widget _buildStatCard(String label, String value, IconData icon, Color color) {
+  Widget _buildStatCard(
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(16),
@@ -281,7 +283,11 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
     );
   }
 
-  Widget _buildQuickActionButton(IconData icon, String label, VoidCallback onTap) {
+  Widget _buildQuickActionButton(
+    IconData icon,
+    String label,
+    VoidCallback onTap,
+  ) {
     return InkWell(
       onTap: onTap,
       child: Container(
@@ -289,7 +295,9 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
         decoration: BoxDecoration(
           color: AppTheme.primaryColor.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppTheme.primaryColor.withValues(alpha: 0.3)),
+          border: Border.all(
+            color: AppTheme.primaryColor.withValues(alpha: 0.3),
+          ),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -311,3 +319,4 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
     );
   }
 }
+

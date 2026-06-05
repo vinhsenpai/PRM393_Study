@@ -1,0 +1,58 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /users/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+
+      allow create, update: if request.auth != null
+        && request.auth.uid == uid
+        && isValidUserDoc();
+
+      allow delete: if request.auth != null
+        && request.auth.uid == uid
+        && get(/databases/$(database)/documents/users/$(uid)).data.role == 'admin';
+    }
+
+    match /products/{docId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    match /orders/{docId} {
+      allow read, write: if request.auth != null;
+    }
+
+    match /cart/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    match /chats/{docId} {
+      allow read, write: if request.auth != null;
+    }
+
+    match /{collection}/{docId} {
+      allow read, write: if request.auth != null;
+    }
+
+    function isValidUserDoc() {
+      return request.auth != null
+        && request.auth.uid == uid
+        && request.resource.data.uid is string
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.name is string
+        && request.resource.data.email is string
+        && request.resource.data.photoUrl is string
+        && request.resource.data.role is string
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.updatedAt is timestamp
+        && (
+          (!exists(/databases/$(database)/documents/users/$(uid)) && request.resource.data.role == 'buyer')
+          ||
+          (exists(/databases/$(database)/documents/users/$(uid)) &&
+            request.resource.data.role == get(/databases/$(database)/documents/users/$(uid)).data.role)
+        );
+    }
+  }
+}
+
