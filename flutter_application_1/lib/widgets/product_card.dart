@@ -67,6 +67,7 @@ class ProductCard extends StatelessWidget {
                   padding: const EdgeInsets.all(8),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.max,
                     children: [
                       Text(
                         product.title,
@@ -86,7 +87,7 @@ class ProductCard extends StatelessWidget {
                           color: AppTheme.primaryColor,
                         ),
                       ),
-                      const Spacer(),
+                      const SizedBox(height: 6),
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 6,
