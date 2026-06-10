@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../providers/cart_provider.dart';
 import 'checkout_screen.dart';
 
+
 class CartScreen extends StatelessWidget {
   const CartScreen({super.key});
 
@@ -17,13 +18,14 @@ class CartScreen extends StatelessWidget {
       body: Column(
         children: [
           Expanded(
-            child: cart.items.isEmpty
+            child: cart.productItems.isEmpty
                 ? const Center(child: Text('Your cart is empty'))
                 : ListView.builder(
-                    itemCount: cart.items.length,
+                    itemCount: cart.productItems.length,
                     itemBuilder: (context, index) {
-                      final item = cart.items.values.toList()[index];
+                      final item = cart.productItems.values.toList()[index];
                       return Card(
+
                         margin: const EdgeInsets.symmetric(
                           horizontal: 12,
                           vertical: 6,
@@ -32,23 +34,25 @@ class CartScreen extends StatelessWidget {
                           leading: ClipRRect(
                             borderRadius: BorderRadius.circular(4),
                             child: Image.network(
-                              item.account.imageUrls.first,
+                              item.product.imageUrls.first,
+
                               width: 60,
                               height: 60,
                               fit: BoxFit.cover,
                             ),
                           ),
-                          title: Text(item.account.title),
+                          title: Text(item.product.title),
                           subtitle: Text(
-                            currencyFormat.format(item.account.price),
+                            currencyFormat.format(item.product.price),
                           ),
+
                           trailing: IconButton(
                             icon: const Icon(
                               Icons.delete_outline,
                               color: Colors.red,
                             ),
-                            onPressed: () {
-                              cart.removeItem(item.account.id);
+                        onPressed: () {
+                              cart.removeProduct(item.product.id);
                             },
                           ),
                         ),

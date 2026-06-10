@@ -20,9 +20,7 @@ class ProductCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(12),
       child: SizedBox(
         width: 140,
-        // Force the widget to the same height everywhere to avoid
-        // RenderFlex overflow in parent Grids/Rows.
-        height: 120,
+        height: 200,
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
@@ -37,7 +35,6 @@ class ProductCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Reserve a fixed image height so the rest always fits.
               SizedBox(
                 height: 72,
                 child: ClipRRect(
@@ -49,71 +46,94 @@ class ProductCard extends StatelessWidget {
                           product.imageUrls.first,
                           fit: BoxFit.cover,
                           width: double.infinity,
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Container(
+                              color: Colors.grey[300]!,
+                              width: double.infinity,
+                              alignment: Alignment.center,
+                              child: const Icon(
+                                Icons.image_not_supported,
+                                size: 40,
+                                color: Color(0xFF6B6B6B),
+                              ),
+                            );
+                          },
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              color: Colors.grey[300]!,
+                              width: double.infinity,
+                              alignment: Alignment.center,
+                              child: const Icon(
+                                Icons.image_not_supported,
+                                size: 40,
+                                color: Color(0xFF6B6B6B),
+                              ),
+                            );
+                          },
                         )
                       : Container(
                           color: Colors.grey[300]!,
                           width: double.infinity,
                           alignment: Alignment.center,
-                          child: Icon(
+                          child: const Icon(
                             Icons.image_not_supported,
                             size: 40,
-                            color: Colors.grey[600]!,
+                            color: Color(0xFF6B6B6B),
                           ),
                         ),
                 ),
               ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.max,
-                    children: [
-                      Text(
-                        product.title,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+              Padding(
+                padding: const EdgeInsets.all(8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      product.title,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
                       ),
-                      const SizedBox(height: 3),
-                      Text(
-                        '${product.price.toStringAsFixed(0)} đ',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.primaryColor,
-                        ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      '${product.price.toStringAsFixed(0)} đ',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.primaryColor,
                       ),
-                      const SizedBox(height: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
+                    ),
+                    const SizedBox(height: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _getStatusColor(product.stockStatus)
+                            .withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(
                           color: _getStatusColor(product.stockStatus)
-                              .withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(4),
-                          border: Border.all(
-                            color: _getStatusColor(product.stockStatus)
-                                .withValues(alpha: 0.3),
-                          ),
-                        ),
-                        child: Text(
-                          product.stockStatus.toString().split('.').last
-                              .toUpperCase(),
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                            color: _getStatusColor(product.stockStatus),
-                          ),
+                              .withValues(alpha: 0.3),
                         ),
                       ),
-                    ],
-                  ),
+                      child: Text(
+                        product.stockStatus.toString().split('.').last
+                            .toUpperCase(),
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: _getStatusColor(product.stockStatus),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],

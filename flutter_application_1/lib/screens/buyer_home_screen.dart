@@ -5,6 +5,9 @@ import '../widgets/product_card.dart';
 import '../theme/app_theme.dart';
 import '../providers/auth_provider.dart';
 import 'cart_screen.dart';
+import 'product_detail_screen.dart';
+import 'package:provider/provider.dart';
+
 
 class BuyerHomeScreen extends StatelessWidget {
   const BuyerHomeScreen({super.key});
@@ -45,7 +48,12 @@ class BuyerHomeScreen extends StatelessWidget {
                     return ProductCard(
                       product: product,
                       onTap: () {
-                        // TODO: Navigate to product detail screen
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => ProductDetailScreen(product: product),
+                          ),
+                        );
                       },
                     );
                   },
@@ -100,7 +108,7 @@ class BuyerHomeScreen extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.logout, color: Colors.red),
             title: const Text('Logout'),
-            onTap: () {},
+            onTap: () => context.read<AuthProvider>().logout(),
           ),
         ],
       ),
