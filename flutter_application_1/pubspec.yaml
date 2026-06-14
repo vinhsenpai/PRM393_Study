@@ -47,6 +47,13 @@ dependencies:
   firebase_messaging: ^15.2.10
   image_picker: ^1.1.2
   google_sign_in: ^6.2.1
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  # For Material 3 (already using Material 3 in widgets)
+  # (no extra deps required for cart)
+  equatable: ^2.0.5
+
+
     
 dev_dependencies:
   flutter_test:

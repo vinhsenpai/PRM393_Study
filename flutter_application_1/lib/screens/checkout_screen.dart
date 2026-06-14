@@ -32,10 +32,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             children: [
               const Text('Order Summary', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 12),
-              ...cart.items.values.map((item) => ListTile(
+...cart.items.values.map((item) => ListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: Text(item.account.title),
-                    trailing: Text(currencyFormat.format(item.account.price)),
+                    title: Text(item.title),
+                    trailing: Text(currencyFormat.format(item.price)),
                   )),
               const Divider(),
               Row(
@@ -43,7 +43,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 children: [
                   const Text('Total', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   Text(
-                    currencyFormat.format(cart.totalAmount),
+                    currencyFormat.format(cart.totalPrice),
+
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -106,7 +107,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     debugPrint('Processing order for: $_name, Phone: $_phone, Method: $_paymentMethod');
     
     // Clear cart and show success
-    context.read<CartProvider>().clear();
+context.read<CartProvider>().clearCart();
     showDialog(
       context: context,
       barrierDismissible: false,

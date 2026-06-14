@@ -5,12 +5,16 @@ import '../models/product.dart';
 import '../providers/auth_provider.dart';
 import '../providers/cart_provider.dart';
 import '../screens/chat_screen.dart';
+import '../screens/product_detail_screen_redesigned.dart';
 import '../theme/app_theme.dart';
 
 class ProductDetailScreen extends StatelessWidget {
   final Product product;
 
+
+
   const ProductDetailScreen({super.key, required this.product});
+
 
   @override
   Widget build(BuildContext context) {
@@ -98,8 +102,8 @@ class ProductDetailScreen extends StatelessWidget {
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
-                onPressed: () {
-                  cart.addProduct(product);
+onPressed: () async {
+                  await cart.addToCart(product);
 
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Đã thêm vào giỏ hàng')),

@@ -1,28 +1,25 @@
 import 'package:flutter/material.dart';
-import '../models/product.dart';
-import '../services/product_service.dart';
-import '../widgets/product_card.dart';
-import '../theme/app_theme.dart';
-import '../providers/auth_provider.dart';
-import 'cart_screen.dart';
-import 'product_detail_screen.dart';
 import 'package:provider/provider.dart';
 
+import '../providers/auth_provider.dart';
+import '../screens/product_catalog_screen.dart';
+import 'cart_screen.dart';
 
 class BuyerHomeScreen extends StatelessWidget {
   const BuyerHomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final ProductService productService = ProductService();
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('GameAcctHub'),
         actions: [
           IconButton(
             icon: const Icon(Icons.shopping_cart),
-            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CartScreen())),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const CartScreen()),
+            ),
           ),
         ],
       ),
@@ -31,35 +28,7 @@ class BuyerHomeScreen extends StatelessWidget {
         children: [
           _buildHero(),
           Expanded(
-            child: StreamBuilder<List<Product>>(
-              stream: productService.getAllProducts(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return const Center(child: Text('No products available'));
-                }
-                return ListView.builder(
-                  padding: const EdgeInsets.all(8),
-                  itemCount: snapshot.data!.length,
-                  itemBuilder: (context, index) {
-                    final product = snapshot.data![index];
-                    return ProductCard(
-                      product: product,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => ProductDetailScreen(product: product),
-                          ),
-                        );
-                      },
-                    );
-                  },
-                );
-              },
-            ),
+            child: const ProductCatalogScreen(),
           ),
         ],
       ),
@@ -72,14 +41,30 @@ class BuyerHomeScreen extends StatelessWidget {
       padding: const EdgeInsets.all(24),
       decoration: const BoxDecoration(
         color: Colors.deepPurple,
-        borderRadius: BorderRadius.only(bottomLeft: Radius.circular(32), bottomRight: Radius.circular(32)),
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(32),
+          bottomRight: Radius.circular(32),
+        ),
       ),
       child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Welcome Back!', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+          Text(
+            'Welcome Back!',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           SizedBox(height: 8),
-          Text('Find your dream game account today.', style: TextStyle(color: Colors.white70, fontSize: 16)),
+          Text(
+            'Find your dream game account today.',
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: 16,
+            ),
+          ),
         ],
       ),
     );
@@ -90,8 +75,8 @@ class BuyerHomeScreen extends StatelessWidget {
       child: ListView(
         children: [
           UserAccountsDrawerHeader(
-            accountName: Text('User'),
-            accountEmail: Text(''),
+            accountName: const Text('User'),
+            accountEmail: const Text(''),
             currentAccountPicture: const CircleAvatar(child: Icon(Icons.person)),
           ),
           ListTile(
@@ -115,3 +100,4 @@ class BuyerHomeScreen extends StatelessWidget {
     );
   }
 }
+

@@ -6,6 +6,9 @@ import 'package:provider/provider.dart';
 import '../models/account.dart';
 import '../providers/cart_provider.dart';
 import 'chat_screen.dart';
+import '_account_detail_cart_mapping.dart';
+
+
 
 class AccountDetailScreen extends StatelessWidget {
   final GameAccount account;
@@ -144,7 +147,8 @@ class AccountDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildBottomActions(BuildContext context) {
+Widget _buildBottomActions(BuildContext context) {
+
     final isAvailable = account.status == AccountStatus.available;
 
     return Container(
@@ -180,9 +184,11 @@ class AccountDetailScreen extends StatelessWidget {
           Expanded(
             flex: 2,
             child: ElevatedButton(
-              onPressed: isAvailable
-                  ? () {
-                      context.read<CartProvider>().addItem(account);
+onPressed: isAvailable
+                  ? () async {
+                      final cartProvider = context.read<CartProvider>();
+final mappedProduct = mapGameAccountToProduct(account);
+                      await cartProvider.addToCart(mappedProduct);
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Added to cart')),
                       );
