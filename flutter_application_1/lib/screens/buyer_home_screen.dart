@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../providers/auth_provider.dart';
 import '../screens/product_catalog_screen.dart';
+import '../screens/order_history_screen.dart';
 import 'cart_screen.dart';
 
 class BuyerHomeScreen extends StatelessWidget {
@@ -27,8 +28,10 @@ class BuyerHomeScreen extends StatelessWidget {
       body: Column(
         children: [
           _buildHero(),
+          _buildSearchBar(),
+          _buildCategoryChips(),
           Expanded(
-            child: const ProductCatalogScreen(),
+            child: ProductCatalogScreen(hideAppBar: true),
           ),
         ],
       ),
@@ -70,6 +73,49 @@ class BuyerHomeScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildSearchBar() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+      child: TextField(
+        decoration: InputDecoration(
+          hintText: 'Search game accounts...',
+          prefixIcon: const Icon(Icons.search),
+          filled: true,
+          fillColor: Colors.white,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+          contentPadding: const EdgeInsets.symmetric(vertical: 0),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCategoryChips() {
+    return const SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: EdgeInsets.fromLTRB(24, 8, 24, 16),
+      child: Row(
+        children: [
+          _CategoryChip(label: 'All', isSelected: true),
+          SizedBox(width: 8),
+          _CategoryChip(label: 'Valorant'),
+          SizedBox(width: 8),
+          _CategoryChip(label: 'Steam'),
+          SizedBox(width: 8),
+          _CategoryChip(label: 'League of Legends'),
+          SizedBox(width: 8),
+          _CategoryChip(label: 'Genshin Impact'),
+          SizedBox(width: 8),
+          _CategoryChip(label: 'PUBG'),
+          SizedBox(width: 8),
+          _CategoryChip(label: 'Other'),
+        ],
+      ),
+    );
+  }
+
   Widget _buildDrawer(BuildContext context) {
     return Drawer(
       child: ListView(
@@ -82,7 +128,14 @@ class BuyerHomeScreen extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.history),
             title: const Text('My Orders'),
-            onTap: () {},
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const OrderHistoryScreen(),
+                ),
+              );
+            },
           ),
           ListTile(
             leading: const Icon(Icons.favorite_border),
@@ -101,3 +154,39 @@ class BuyerHomeScreen extends StatelessWidget {
   }
 }
 
+class _CategoryChip extends StatelessWidget {
+  final String label;
+  final bool isSelected;
+
+  const _CategoryChip({
+    required this.label,
+    this.isSelected = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final ColorScheme colorScheme = theme.colorScheme;
+
+    return FilterChip(
+      label: Text(label),
+      selected: isSelected,
+      onSelected: (_) {
+        // TODO: Implement category filtering
+      },
+      selectedColor: colorScheme.primary.withOpacity(0.2),
+      checkmarkColor: colorScheme.primary,
+      backgroundColor: colorScheme.surfaceVariant,
+      labelStyle: TextStyle(
+        color: isSelected ? colorScheme.primary : colorScheme.onSurfaceVariant,
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+side: BorderSide(
+          color: colorScheme.outlineVariant,
+        ),
+      ),
+    );
+  }
+}

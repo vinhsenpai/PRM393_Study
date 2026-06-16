@@ -7,7 +7,6 @@ import '../../theme/app_theme.dart';
 class MarketplaceProductCard extends StatelessWidget {
   final Product product;
   final VoidCallback? onTap;
-  final VoidCallback? onQuickView;
   final VoidCallback? onFavorite;
   final bool isFavorite;
 
@@ -15,7 +14,6 @@ class MarketplaceProductCard extends StatelessWidget {
     super.key,
     required this.product,
     this.onTap,
-    this.onQuickView,
     this.onFavorite,
     this.isFavorite = false,
   });
@@ -36,6 +34,28 @@ class MarketplaceProductCard extends StatelessWidget {
   String _statusText(ProductStatus status) =>
       status.toString().split('.').last.toUpperCase();
 
+  Widget _buildImagePlaceholder(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      height: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Colors.deepPurple.withValues(alpha: 0.2),
+            Colors.indigo.withValues(alpha: 0.2),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: const Icon(
+        Icons.videogame_asset,
+        size: 48,
+        color: Colors.deepPurple,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final coverUrl = product.imageUrls.where((e) => e.trim().isNotEmpty).isEmpty
@@ -46,144 +66,103 @@ class MarketplaceProductCard extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(16),
       child: Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(16),
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
-              blurRadius: 16,
-              offset: const Offset(0, 8),
+              color: Colors.black.withValues(alpha: 0.06),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Padding(
-              padding: const EdgeInsets.all(10),
-              child: AspectRatio(
-                aspectRatio: 16 / 9,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(14),
-                  child: Stack(
-                    children: [
-                      if (coverUrl != null)
-                        CachedNetworkImage(
-                          imageUrl: coverUrl,
-                          fit: BoxFit.cover,
-                          width: double.infinity,
-                          placeholder: (context, _) => Container(
-                            color: Colors.grey.shade200,
-                          ),
-                          errorWidget: (context, _, __) => Container(
-                            color: Colors.grey.shade200,
-                            alignment: Alignment.center,
-                            child: const Icon(Icons.image_not_supported,
-                                size: 44, color: Color(0xFF6B6B6B)),
-                          ),
-                        )
-                      else
-                        Container(
-                          color: Colors.grey.shade200,
-                          alignment: Alignment.center,
-                          child: const Icon(Icons.image_not_supported,
-                              size: 44, color: Color(0xFF6B6B6B)),
-                        ),
+            // Image section with reduced height (1:1 aspect ratio)
+            AspectRatio(
+              aspectRatio: 1 / 1,
+              child: ClipRRect(
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                child: Stack(
+                  children: [
+                    if (coverUrl != null)
+                      CachedNetworkImage(
+                        imageUrl: coverUrl,
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        placeholder: (context, _) => _buildImagePlaceholder(context),
+                        errorWidget: (context, _, __) => _buildImagePlaceholder(context),
+                      )
+                    else
+                      _buildImagePlaceholder(context),
 
-                      // Stock badge
-                      Positioned(
-                        top: 8,
-                        left: 8,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 6,
+                    // Stock badge
+                    Positioned(
+                      top: 8,
+                      left: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: statusColor.withValues(alpha: 0.14),
+                          border: Border.all(
+                            color: statusColor.withValues(alpha: 0.35),
+                            width: 0.9,
                           ),
-                          decoration: BoxDecoration(
-                            color: statusColor.withValues(alpha: 0.14),
-                            border: Border.all(
-                              color: statusColor.withValues(alpha: 0.35),
-                              width: 0.9,
-                            ),
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                          child: Text(
-                            _statusText(product.stockStatus),
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w800,
-                              color: statusColor,
-                            ),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          _statusText(product.stockStatus),
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            color: statusColor,
                           ),
                         ),
                       ),
+                    ),
 
-                      // Favorite + quick view
-                      Positioned(
-                        top: 8,
-                        right: 8,
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: onFavorite,
-                            borderRadius: BorderRadius.circular(12),
-                            child: Container(
-                              width: 36,
-                              height: 36,
-                              decoration: BoxDecoration(
-                                color: Colors.black.withValues(alpha: 0.35),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                isFavorite
-                                    ? Icons.favorite
-                                    : Icons.favorite_border,
-                                color: isFavorite ? Colors.pinkAccent : Colors.white,
-                                size: 18,
-                              ),
+                    // Favorite button (top right)
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: onFavorite,
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.35),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              isFavorite
+                                  ? Icons.favorite
+                                  : Icons.favorite_border,
+                              color: isFavorite ? Colors.pinkAccent : Colors.white,
+                              size: 18,
                             ),
                           ),
                         ),
                       ),
-                      Positioned(
-                        bottom: 10,
-                        left: 10,
-                        right: 10,
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: FilledButton.icon(
-                                onPressed: onQuickView,
-                                icon: const Icon(Icons.remove_red_eye_outlined,
-                                    size: 18),
-                                label: const Text('Quick View'),
-                                style: FilledButton.styleFrom(
-                                  backgroundColor:
-                                      Colors.black.withValues(alpha: 0.55),
-                                  foregroundColor: Colors.white,
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 10),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),
 
-            // Body
+            // Body with increased emphasis on title and price
             Padding(
-              padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -192,29 +171,29 @@ class MarketplaceProductCard extends StatelessWidget {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 15,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 16,
                     ),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 4),
                   Text(
                     product.game,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: 13,
                       color: Colors.black.withValues(alpha: 0.6),
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 8),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
                         '${product.price.toStringAsFixed(0)} đ',
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 18,
                           fontWeight: FontWeight.w900,
                           color: AppTheme.primaryColor,
                         ),
@@ -222,7 +201,7 @@ class MarketplaceProductCard extends StatelessWidget {
                       if (product.tags.isNotEmpty)
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 6),
+                              horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
                             color: AppTheme.primaryColor.withValues(alpha: 0.08),
                             borderRadius: BorderRadius.circular(999),
@@ -242,7 +221,7 @@ class MarketplaceProductCard extends StatelessWidget {
                   ),
                 ],
               ),
-            )
+            ),
           ],
         ),
       ),

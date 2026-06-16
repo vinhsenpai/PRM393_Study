@@ -6,6 +6,7 @@ import '../providers/cart_provider.dart';
 import '../widgets/cart/cart_item_widget.dart';
 import '../widgets/cart/empty_cart_state.dart';
 import '../widgets/cart/order_summary_bar.dart';
+import '../screens/checkout_screen.dart';
 
 class CartScreen extends StatelessWidget {
   const CartScreen({super.key});
@@ -69,12 +70,14 @@ class CartScreen extends StatelessWidget {
               totalItems: cart.totalItems,
               totalPrice: cart.totalPrice,
               onCheckout: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Checkout is not implemented yet.')),
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const CheckoutScreen(),
+                  ),
                 );
               },
             ),
     );
   }
 }
-
