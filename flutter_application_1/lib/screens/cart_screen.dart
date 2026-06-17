@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+
 import '../providers/cart_provider.dart';
-import 'checkout_screen.dart';
-import 'account_detail_screen.dart';
+import '../widgets/cart/cart_item_widget.dart';
+import '../widgets/cart/empty_cart_state.dart';
+import '../widgets/cart/order_summary_bar.dart';
+import '../screens/checkout_screen.dart';
 
 class CartScreen extends StatelessWidget {
   const CartScreen({super.key});
@@ -11,116 +14,70 @@ class CartScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cart = context.watch<CartProvider>();
+
     final currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Shopping Cart')),
-      body: Column(
-        children: [
-          Expanded(
-            child: cart.items.isEmpty
-                ? const Center(child: Text('Your cart is empty'))
-                : ListView.builder(
-                    itemCount: cart.items.length,
-                    itemBuilder: (context, index) {
-                      final item = cart.items.values.toList()[index];
-                      return Card(
-                        margin: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        child: ListTile(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                    AccountDetailScreen(account: item.account),
-                              ),
-                            );
-                          },
-                          leading: ClipRRect(
-                            borderRadius: BorderRadius.circular(4),
-                            child: Image.network(
-                              item.account.imageUrls.first,
-                              width: 60,
-                              height: 60,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                          title: Text(item.account.title),
-                          subtitle: Text(
-                            currencyFormat.format(item.account.price),
-                          ),
-                          trailing: IconButton(
-                            icon: const Icon(
-                              Icons.delete_outline,
-                              color: Colors.red,
-                            ),
-                            onPressed: () {
-                              cart.removeItem(item.account.id);
-                            },
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-          ),
-          if (cart.items.isNotEmpty)
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, -5),
-                  ),
+      appBar: AppBar(
+        title: const Text('Cart'),
+        scrolledUnderElevation: 0,
+      ),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await context.read<CartProvider>().loadCart();
+        },
+        child: cart.isEmpty
+            ? ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                children: const [
+                  SizedBox(height: 260),
+                  EmptyCartState(),
                 ],
-              ),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Total:',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
+              )
+            : CustomScrollView(
+                slivers: [
+                  SliverPadding(
+                    padding: const EdgeInsets.only(bottom: 96),
+                    sliver: SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          final items = cart.items.values.toList();
+                          final item = items[index];
+
+                          return CartItemWidget(
+                            item: item,
+                            onRemove: () async {
+                              await context.read<CartProvider>().removeFromCart(item.productId);
+                            },
+                            onIncrement: () async {
+                              await context.read<CartProvider>().changeQuantityBy(item.productId, 1);
+                            },
+                            onDecrement: () async {
+                              await context.read<CartProvider>().changeQuantityBy(item.productId, -1);
+                            },
+                          );
+                        },
+                        childCount: cart.items.length,
                       ),
-                      Text(
-                        currencyFormat.format(cart.totalAmount),
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).primaryColor,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const CheckoutScreen(),
-                          ),
-                        );
-                      },
-                      child: const Text('Checkout'),
                     ),
                   ),
                 ],
               ),
-            ),
-        ],
       ),
+      bottomNavigationBar: cart.isEmpty
+          ? const SizedBox.shrink()
+          : OrderSummaryBar(
+              totalItems: cart.totalItems,
+              totalPrice: cart.totalPrice,
+              onCheckout: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const CheckoutScreen(),
+                  ),
+                );
+              },
+            ),
     );
   }
 }

@@ -1,7 +1,20 @@
 import 'package:flutter/material.dart';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 import '../models/user.dart';
+import '../services/auth_service.dart';
+
 
 class AuthProvider with ChangeNotifier {
+  AuthProvider({AuthService? authService}) : _authService = authService ?? AuthService();
+
+  final AuthService _authService;
+
+  FirebaseFirestore get firestore => _authService.firestore;
+
+
+
   User? _currentUser;
 
   User? get currentUser => _currentUser;
@@ -13,38 +26,136 @@ class AuthProvider with ChangeNotifier {
   bool get isAdmin => _currentUser?.role == UserRole.admin;
 
   Future<void> login(String email, String password) async {
-    // Demo login logic
-    await Future.delayed(const Duration(seconds: 1));
-    
-    // Default to buyer for demo, or based on email
-    UserRole role = UserRole.buyer;
-    if (email.contains('admin')) {
-      role = UserRole.admin;
-    } else if (email.contains('seller')) {
-      role = UserRole.seller;
+    try {
+      final userCredential = await _authService.loginWithEmailPassword(email, password);
+      await _authService.createOrUpdateUserInFirestore(userCredential);
+
+      final fbUser = userCredential.user;
+      final uid = fbUser?.uid;
+      if (uid == null) {
+        throw StateError('FirebaseAuth user is null after sign-in.');
+      }
+
+      // Get fresh user data from Firestore to ensure we have the latest fields
+      final freshUserDoc = await _authService.firestore.collection('users').doc(uid).get();
+      if (freshUserDoc.exists) {
+        _currentUser = User.fromDocument(uid, freshUserDoc.data()!);
+      } else {
+        // Fallback if Firestore doc doesn't exist yet
+        final roleStr = await _authService.getUserRole(uid);
+        final role = switch (roleStr) {
+          'admin' => UserRole.admin,
+          'seller' => UserRole.seller,
+          _ => UserRole.buyer,
+        };
+
+        _currentUser = User(
+          id: uid,
+          email: fbUser?.email ?? '',
+          name: fbUser?.displayName ?? (fbUser?.email?.split('@').first.toUpperCase() ?? 'USER'),
+          photoUrl: fbUser?.photoURL,
+          role: role,
+          provider: 'email',
+          emailVerified: fbUser?.emailVerified ?? false,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
+      }
+      notifyListeners();
+    } catch (e) {
+      rethrow;
     }
-
-    _currentUser = User(
-      id: 'u1',
-      email: email,
-      name: email.split('@')[0].toUpperCase(),
-      role: role,
-    );
-    notifyListeners();
   }
 
-  Future<void> register(String name, String email, String password, UserRole role) async {
-    await Future.delayed(const Duration(seconds: 1));
-    _currentUser = User(
-      id: DateTime.now().toString(),
-      email: email,
-      name: name,
-      role: role,
-    );
-    notifyListeners();
+    Future<void> register(String name, String email, String password, UserRole role) async {
+     try {
+       final userCredential = await _authService.signUpWithEmailPassword(email, password);
+       await _authService.createOrUpdateUserInFirestore(userCredential);
+
+       final fbUser = userCredential.user;
+       final uid = fbUser?.uid;
+       if (uid == null) {
+         throw StateError('FirebaseAuth user is null after sign-up.');
+       }
+
+       // Get fresh user data from Firestore to ensure we have the latest fields
+       final freshUserDoc = await _authService.firestore.collection('users').doc(uid).get();
+       if (freshUserDoc.exists) {
+         _currentUser = User.fromDocument(uid, freshUserDoc.data()!);
+       } else {
+         // Fallback if Firestore doc doesn't exist yet
+         _currentUser = User(
+           id: uid,
+           email: fbUser?.email ?? '',
+           name: name,
+           photoUrl: fbUser?.photoURL,
+           role: role,
+           provider: 'email',
+           emailVerified: fbUser?.emailVerified ?? false,
+           createdAt: DateTime.now(),
+           updatedAt: DateTime.now(),
+         );
+       }
+       notifyListeners();
+     } catch (e) {
+       rethrow;
+     }
+   }
+
+  /// Sends email verification to the current user.
+  Future<void> sendEmailVerification() async {
+    await _authService.sendEmailVerification();
   }
 
-  void logout() {
+  /// Checks if the current user's email is verified.
+  Future<bool> isEmailVerified() async {
+    return await _authService.isEmailVerified();
+  }
+
+  Future<void> signInWithGoogle() async {
+    try {
+      final userCredential = await _authService.loginWithGoogle();
+      await _authService.createOrUpdateUserInFirestore(userCredential);
+
+      final fbUser = userCredential.user;
+      final uid = fbUser?.uid;
+      if (uid == null) {
+        throw StateError('FirebaseAuth user is null after Google sign-in.');
+      }
+
+      // Get fresh user data from Firestore to ensure we have the latest fields
+      final freshUserDoc = await _authService.firestore.collection('users').doc(uid).get();
+      if (freshUserDoc.exists) {
+        _currentUser = User.fromDocument(uid, freshUserDoc.data()!);
+      } else {
+        // Fallback if Firestore doc doesn't exist yet
+        final roleStr = await _authService.getUserRole(uid);
+        final role = switch (roleStr) {
+          'admin' => UserRole.admin,
+          'seller' => UserRole.seller,
+          _ => UserRole.buyer,
+        };
+
+        _currentUser = User(
+          id: uid,
+          email: fbUser?.email ?? '',
+          name: fbUser?.displayName ?? (fbUser?.email?.split('@').first.toUpperCase() ?? 'USER'),
+          photoUrl: fbUser?.photoURL,
+          role: role,
+          provider: 'google',
+          emailVerified: fbUser?.emailVerified ?? true,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
+      }
+      notifyListeners();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<void> logout() async {
+    await _authService.signOut();
     _currentUser = null;
     notifyListeners();
   }

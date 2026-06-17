@@ -1,61 +1,96 @@
 import 'package:flutter/material.dart';
+
+import '../models/product.dart';
 import '../models/cart_item.dart';
-import '../models/account.dart';
+import '../services/cart_service.dart';
 
-class CartProvider with ChangeNotifier {
-  final Map<String, CartItem> _items = {
-    '1': CartItem(
-      id: 'dummy_1',
-      account: GameAccount.dummyAccounts[0],
-      quantity: 1,
-    ),
-    '2': CartItem(
-      id: 'dummy_2',
-      account: GameAccount.dummyAccounts[1],
-      quantity: 1,
-    ),
-  };
+class CartProvider extends ChangeNotifier {
+  final CartService _cartService;
 
-  CartProvider();
+  CartProvider({CartService? cartService}) : _cartService = cartService ?? CartService();
+
+  final Map<String, CartItem> _items = {};
 
   Map<String, CartItem> get items => {..._items};
 
   int get itemCount => _items.length;
 
-  double get totalAmount {
-    double total = 0.0;
-    _items.forEach((key, cartItem) {
-      total += cartItem.totalPrice;
-    });
-    return total;
+  int get totalItems => _items.values.fold<int>(0, (sum, item) => sum + item.quantity);
+
+  double get totalPrice => _items.values.fold<double>(0.0, (sum, item) => sum + item.price * item.quantity);
+
+  bool containsProduct(String productId) => _items.containsKey(productId);
+
+  Future<void> loadCart() async {
+    final loaded = await _cartService.loadCart();
+    _items
+      ..clear()
+      ..addAll(loaded);
+    notifyListeners();
   }
 
-  void addItem(GameAccount account) {
-    if (_items.containsKey(account.id)) {
-      _items.update(
-        account.id,
-        (existingItem) => CartItem(
-          id: existingItem.id,
-          account: existingItem.account,
-          quantity: existingItem.quantity + 1,
-        ),
-      );
-    } else {
-      _items.putIfAbsent(
-        account.id,
-        () => CartItem(id: DateTime.now().toString(), account: account),
-      );
+  Future<void> addToCart(Product product, {String? imageUrlOverride}) async {
+    final productId = product.id;
+
+    final imageUrl = (imageUrlOverride ?? (product.imageUrls.isNotEmpty ? product.imageUrls.first : '')).trim();
+
+    if (_items.containsKey(productId)) {
+      final existing = _items[productId]!;
+      final updated = existing.copyWith(quantity: existing.quantity + 1);
+      _items[productId] = updated;
+      await _cartService.putItem(productId, updated);
+      notifyListeners();
+      return;
     }
+
+    final item = CartItem(
+      productId: productId,
+      title: product.title,
+      price: product.price,
+      imageUrl: imageUrl,
+      quantity: 1,
+      sellerId: product.sellerId,
+      game: product.game,
+      stockStatus: product.stockStatus.toString().split('.').last,
+      addedAt: DateTime.now(),
+    );
+
+    _items[productId] = item;
+    await _cartService.putItem(productId, item);
     notifyListeners();
   }
 
-  void removeItem(String accountId) {
-    _items.remove(accountId);
+  Future<void> removeFromCart(String productId) async {
+    _items.remove(productId);
+    await _cartService.removeItem(productId);
     notifyListeners();
   }
 
-  void clear() {
+  Future<void> updateQuantity(String productId, int newQuantity) async {
+    if (!_items.containsKey(productId)) return;
+
+    final clamped = newQuantity < 1 ? 1 : newQuantity;
+    final existing = _items[productId]!;
+    final updated = existing.copyWith(quantity: clamped);
+
+    _items[productId] = updated;
+    await _cartService.putItem(productId, updated);
+    notifyListeners();
+  }
+
+  Future<void> changeQuantityBy(String productId, int delta) async {
+    if (!_items.containsKey(productId)) return;
+
+    final existing = _items[productId]!;
+    await updateQuantity(productId, existing.quantity + delta);
+  }
+
+  bool get isEmpty => _items.isEmpty;
+
+  Future<void> clearCart() async {
     _items.clear();
+    await _cartService.clear();
     notifyListeners();
   }
 }
+

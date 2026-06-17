@@ -16,11 +16,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  final _verificationCodeController = TextEditingController();
 
   UserRole _selectedRole = UserRole.buyer;
   bool _isLoading = false;
-  bool _isSendingCode = false;
 
   @override
   Widget build(BuildContext context) {
@@ -45,86 +43,76 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.person_outline),
                 ),
-                validator: (value) =>
-                    value!.isEmpty ? 'Please enter your name' : null,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _emailController,
-                decoration: const InputDecoration(
-                  labelText: 'Email',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.email_outlined),
-                ),
-                keyboardType: TextInputType.emailAddress,
-                validator: (value) => value!.isEmpty || !value.contains('@')
-                    ? 'Please enter a valid email'
-                    : null,
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    flex: 2,
-                    child: TextFormField(
-                      controller: _verificationCodeController,
-                      decoration: const InputDecoration(
-                        labelText: 'Verification Code',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.verified_user_outlined),
-                      ),
-                      validator: (value) =>
-                          value!.isEmpty ? 'Enter code' : null,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: SizedBox(
-                      height: 56, // Match height of TextField
-                      child: OutlinedButton(
-                        onPressed: _isSendingCode ? null : _handleSendCode,
-                        child: _isSendingCode
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Text('Send'),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _passwordController,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: 'Password',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.lock_outline),
-                ),
-                validator: (value) =>
-                    value!.length < 6 ? 'Password too short' : null,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _confirmPasswordController,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: 'Confirm Password',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.lock_reset_outlined),
-                ),
-                validator: (value) {
-                  if (value != _passwordController.text) {
-                    return 'Passwords do not match';
-                  }
-                  return null;
-                },
-              ),
+               validator: (value) =>
+                     value!.isEmpty ? 'Please enter your name' : null,
+               ),
+               const SizedBox(height: 16),
+               TextFormField(
+                 controller: _emailController,
+                 decoration: const InputDecoration(
+                   labelText: 'Email',
+                   border: OutlineInputBorder(),
+                   prefixIcon: Icon(Icons.email_outlined),
+                 ),
+                 keyboardType: TextInputType.emailAddress,
+                 validator: (value) {
+                   if (value == null || value.isEmpty) {
+                     return 'Please enter your email';
+                   }
+                   // Simple email regex pattern
+                   final emailRegExp = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+                   if (!emailRegExp.hasMatch(value)) {
+                     return 'Please enter a valid email';
+                   }
+                   return null;
+                 },
+               ),
+               const SizedBox(height: 16),
+               TextFormField(
+                 controller: _passwordController,
+                 obscureText: true,
+                 decoration: const InputDecoration(
+                   labelText: 'Password',
+                   border: OutlineInputBorder(),
+                   prefixIcon: Icon(Icons.lock_outline),
+                 ),
+                 validator: (value) {
+                   if (value == null || value.isEmpty) {
+                     return 'Please enter your password';
+                   }
+                   if (value.length < 6) {
+                     return 'Password must be at least 6 characters';
+                   }
+                   // Optional: Add stronger password validation
+                   // final hasUpperCase = RegExp(r'[A-Z]').hasMatch(value);
+                   // final hasLowerCase = RegExp(r'[a-z]').hasMatch(value);
+                   // final hasDigits = RegExp(r'[0-9]').hasMatch(value);
+                   // final hasSpecialChars = RegExp(r'[!@#\$&*~]').hasMatch(value);
+                   // if (!hasUpperCase || !hasLowerCase || !hasDigits || !hasSpecialChars) {
+                   //   return 'Password must contain uppercase, lowercase, number and special character';
+                   // }
+                   return null;
+                 },
+               ),
+               const SizedBox(height: 16),
+               TextFormField(
+                 controller: _confirmPasswordController,
+                 obscureText: true,
+                 decoration: const InputDecoration(
+                   labelText: 'Confirm Password',
+                   border: OutlineInputBorder(),
+                   prefixIcon: Icon(Icons.lock_reset_outlined),
+                 ),
+                 validator: (value) {
+                   if (value == null || value.isEmpty) {
+                     return 'Please confirm your password';
+                   }
+                   if (value != _passwordController.text) {
+                     return 'Passwords do not match';
+                   }
+                   return null;
+                 },
+               ),
               const SizedBox(height: 24),
               const Text(
                 'I want to be a:',
@@ -170,43 +158,58 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  void _handleSendCode() async {
-    if (_emailController.text.isEmpty || !_emailController.text.contains('@')) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a valid email first')),
-      );
-      return;
-    }
-
-    setState(() => _isSendingCode = true);
-    // Simulate sending email
-    await Future.delayed(const Duration(seconds: 2));
-    if (mounted) {
-      setState(() => _isSendingCode = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Verification code sent to your email!')),
-      );
-    }
-  }
-
-  void _handleRegister() async {
+  Future<void> _handleRegister() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
     try {
+      // Register the user
       await context.read<AuthProvider>().register(
         _nameController.text,
         _emailController.text,
         _passwordController.text,
         _selectedRole,
       );
-      if (mounted) Navigator.pop(context);
+      
+      if (!mounted) return;
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Registration successful! Sending verification email...')),
+      );
+
+      // Send verification email
+      try {
+        await context.read<AuthProvider>().sendEmailVerification();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Verification email sent! Please check your inbox.')),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to send verification email: $e')),
+          );
+        }
+      }
+
+      // Navigate to login screen after a brief delay
+      await Future.delayed(const Duration(seconds: 2));
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.toString())));
       }
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 }

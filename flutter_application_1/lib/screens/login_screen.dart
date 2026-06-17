@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../providers/auth_provider.dart';
-import 'register_screen.dart';
 import 'forgot_password_screen.dart';
+import 'register_screen.dart';
+import 'verify_email_screen.dart';
+
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -14,7 +17,9 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+
   bool _isLoading = false;
+  bool _isGoogleLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -73,7 +78,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 8),
               ElevatedButton(
-                onPressed: _isLoading ? null : _handleLogin,
+                onPressed: _isLoading ? null : _handleEmailLogin,
                 child: _isLoading
                     ? const SizedBox(
                         height: 20,
@@ -86,6 +91,18 @@ class _LoginScreenState extends State<LoginScreen> {
                     : const Text('Login'),
               ),
               const SizedBox(height: 16),
+              OutlinedButton.icon(
+                onPressed: _isGoogleLoading ? null : _handleGoogleLogin,
+                icon: const Icon(Icons.login),
+                label: _isGoogleLoading
+                    ? const SizedBox(
+                        height: 18,
+                        width: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Continue with Google'),
+              ),
+              const SizedBox(height: 16),
               TextButton(
                 onPressed: () {
                   Navigator.push(
@@ -93,7 +110,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     MaterialPageRoute(builder: (_) => const RegisterScreen()),
                   );
                 },
-                child: const Text('Don\'t have an account? Register'),
+                child: const Text("Don't have an account? Register"),
               ),
               const Divider(height: 40),
               const Text(
@@ -113,21 +130,53 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  void _handleLogin() async {
+
+  Future<void> _handleEmailLogin() async {
     setState(() => _isLoading = true);
     try {
       await context.read<AuthProvider>().login(
-        _emailController.text,
-        _passwordController.text,
+            _emailController.text.trim(),
+            _passwordController.text,
+          );
+
+      // Check if email is verified after login
+      if (!mounted) return;
+
+      final isVerified = await context.read<AuthProvider>().isEmailVerified();
+      if (!isVerified) {
+        // Navigate to verify email screen
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const VerifyEmailScreen()),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+
+  Future<void> _handleGoogleLogin() async {
+    setState(() => _isGoogleLoading = true);
+    try {
+      await context.read<AuthProvider>().signInWithGoogle();
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Signed in with Google!')),
       );
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(e.toString())));
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isGoogleLoading = false);
     }
   }
 }
+

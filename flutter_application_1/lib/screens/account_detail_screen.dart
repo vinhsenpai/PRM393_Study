@@ -6,6 +6,9 @@ import 'package:provider/provider.dart';
 import '../models/account.dart';
 import '../providers/cart_provider.dart';
 import 'chat_screen.dart';
+import '_account_detail_cart_mapping.dart';
+
+
 
 class AccountDetailScreen extends StatelessWidget {
   final GameAccount account;
@@ -144,9 +147,8 @@ class AccountDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildBottomActions(BuildContext context) {
-    final cart = context.watch<CartProvider>();
-    final isInCart = cart.items.containsKey(account.id);
+Widget _buildBottomActions(BuildContext context) {
+
     final isAvailable = account.status == AccountStatus.available;
 
     return Container(
@@ -170,7 +172,7 @@ class AccountDetailScreen extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                     builder: (context) =>
-                        ChatScreen(otherUser: account.sellerName),
+                        ChatScreen.otherUser(otherUser: account.sellerName),
                   ),
                 );
               },
@@ -181,32 +183,24 @@ class AccountDetailScreen extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             flex: 2,
-            child: isInCart
-                ? ElevatedButton.icon(
-                    onPressed: null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey[200],
-                      foregroundColor: Colors.grey[600],
-                    ),
-                    icon: const Icon(Icons.check_circle_outline),
-                    label: const Text('Already in Cart'),
-                  )
-                : ElevatedButton(
-                    onPressed: isAvailable
-                        ? () {
-                            context.read<CartProvider>().addItem(account);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Added to cart')),
-                            );
-                          }
-                        : null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: isAvailable
-                          ? Theme.of(context).primaryColor
-                          : Colors.grey,
-                    ),
-                    child: Text(isAvailable ? 'Add to Cart' : 'Not Available'),
-                  ),
+            child: ElevatedButton(
+onPressed: isAvailable
+                  ? () async {
+                      final cartProvider = context.read<CartProvider>();
+final mappedProduct = mapGameAccountToProduct(account);
+                      await cartProvider.addToCart(mappedProduct);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Added to cart')),
+                      );
+                    }
+                  : null,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: isAvailable
+                    ? Theme.of(context).primaryColor
+                    : Colors.grey,
+              ),
+              child: Text(isAvailable ? 'Add to Cart' : 'Not Available'),
+            ),
           ),
         ],
       ),
