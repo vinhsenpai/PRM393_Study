@@ -95,6 +95,34 @@ Stream<List<app_order.MarketplaceOrder>> getUserOrders() {
     return app_order.MarketplaceOrder.fromMap(data);
   }
 
+  // Get orders for the current user as a seller
+  Stream<List<app_order.MarketplaceOrder>> getSellerOrders() {
+    if (_userId.isEmpty) {
+      return const Stream.empty();
+    }
+    return _ordersCollection
+        .where('sellerId', isEqualTo: _userId)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => app_order.MarketplaceOrder.fromMap(doc.data() as Map<String, dynamic>))
+            .toList());
+  }
+
+  // Get orders by sellerId
+  Stream<List<app_order.MarketplaceOrder>> getOrdersBySeller(String sellerId) {
+    if (sellerId.isEmpty) {
+      return const Stream.empty();
+    }
+    return _ordersCollection
+        .where('sellerId', isEqualTo: sellerId)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => app_order.MarketplaceOrder.fromMap(doc.data() as Map<String, dynamic>))
+            .toList());
+  }
+
   // Update order status
   Future<void> updateOrderStatus(String orderId, String status) async {
     if (_userId.isEmpty) return;
