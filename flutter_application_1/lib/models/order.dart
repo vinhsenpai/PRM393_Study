@@ -41,7 +41,12 @@ class MarketplaceOrder {
   final String orderId;
   final String buyerId;
   final String sellerId;
+  final String buyerName;
+  final String buyerEmail;
   final List<OrderItem> items;
+  final double subtotal;
+  final double tax;
+  final double serviceFee;
   final double totalAmount;
   final String status; // pending, processing, completed, cancelled
   final Timestamp createdAt;
@@ -51,7 +56,12 @@ class MarketplaceOrder {
     required this.orderId,
     required this.buyerId,
     required this.sellerId,
+    required this.buyerName,
+    required this.buyerEmail,
     required this.items,
+    required this.subtotal,
+    required this.tax,
+    required this.serviceFee,
     required this.totalAmount,
     required this.status,
     required this.createdAt,
@@ -63,7 +73,12 @@ class MarketplaceOrder {
       'orderId': orderId,
       'buyerId': buyerId,
       'sellerId': sellerId,
+      'buyerName': buyerName,
+      'buyerEmail': buyerEmail,
       'items': items.map((item) => item.toMap()).toList(),
+      'subtotal': subtotal,
+      'tax': tax,
+      'serviceFee': serviceFee,
       'totalAmount': totalAmount,
       'status': status,
       'createdAt': createdAt,
@@ -76,13 +91,23 @@ class MarketplaceOrder {
       orderId: map['orderId'] ?? '',
       buyerId: map['buyerId'] ?? '',
       sellerId: map['sellerId'] ?? '',
+      buyerName: map['buyerName'] ?? '',
+      buyerEmail: map['buyerEmail'] ?? '',
       items: List<OrderItem>.from(
         map['items']?.map((item) => OrderItem.fromMap(item)) ?? [],
       ),
+      subtotal: map['subtotal']?.toDouble() ?? 0.0,
+      tax: map['tax']?.toDouble() ?? 0.0,
+      serviceFee: map['serviceFee']?.toDouble() ?? 0.0,
       totalAmount: map['totalAmount']?.toDouble() ?? 0.0,
       status: map['status'] ?? 'pending',
       createdAt: map['createdAt'],
       updatedAt: map['updatedAt'],
     );
+  }
+
+  // Factory method to create from DocumentSnapshot (for use in stream)
+  factory MarketplaceOrder.fromDocument(DocumentSnapshot doc) {
+    return MarketplaceOrder.fromMap(doc.data() as Map<String, dynamic>);
   }
 }
