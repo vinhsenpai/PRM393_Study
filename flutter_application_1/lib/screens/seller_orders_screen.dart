@@ -50,16 +50,6 @@ class _SellerOrdersScreenState extends State<SellerOrdersScreen> {
     return searchedOrders.where((order) => order.status.toLowerCase() == _selectedFilter.toLowerCase()).toList();
   }
 
-  int _getCrossAxisCount(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    if (screenWidth < 400) {
-      return 2;
-    } else if (screenWidth >= 600) {
-      return 4;
-    }
-    return 3; // for screens between 400 and 600
-  }
-
   @override
   Widget build(BuildContext context) {
     final orderService = OrderService();
@@ -125,12 +115,12 @@ class _SellerOrdersScreenState extends State<SellerOrdersScreen> {
 
           return CustomScrollView(
             slivers: [
-              // Summary Cards - Responsive Grid
+              // Summary Cards - Fixed 2x2 grid for 4 cards
               SliverPadding(
                 padding: const EdgeInsets.all(16),
                 sliver: SliverGrid(
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: _getCrossAxisCount(context),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
                     childAspectRatio: 1.5,
                     mainAxisSpacing: 12,
                     crossAxisSpacing: 12,
