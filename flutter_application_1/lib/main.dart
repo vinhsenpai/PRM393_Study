@@ -16,8 +16,8 @@ import 'hive/cart_item_adapter.dart';
 import 'providers/auth_provider.dart';
 
 import 'screens/login_screen.dart';
-import 'screens/buyer_home_screen.dart';
-import 'screens/seller_home_screen.dart';
+import 'navigation/buyer_navigation_shell.dart';
+import 'navigation/seller_navigation_shell.dart';
 import 'screens/admin_home_screen.dart';
 import 'screens/verify_email_screen.dart';
 import 'screens/email_verification_required_screen.dart';
@@ -100,19 +100,19 @@ class GameAcctHubApp extends StatelessWidget {
               }
 
               // If email is verified, proceed to home screen
-              if (snapshot.data == true) {
-                switch (auth.currentUser?.role) {
-                  case UserRole.admin:
-                    return const AdminHomeScreen();
+  if (snapshot.data == true) {
+  switch (auth.currentUser?.role) {
+    case UserRole.admin:
+      return const AdminHomeScreen();
 
-                  case UserRole.seller:
-                    return const SellerHomeScreen();
+    case UserRole.seller:
+      return const SellerNavigationShell();
 
-                  case UserRole.buyer:
-                  default:
-                    return const BuyerHomeScreen();
-                }
-              }
+    case UserRole.buyer:
+    default:
+      return const BuyerNavigationShell();
+  }
+}
 
               // If email is not verified, show verification required screen
               return const EmailVerificationRequiredScreen();
