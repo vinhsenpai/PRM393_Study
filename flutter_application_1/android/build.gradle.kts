@@ -9,6 +9,26 @@ allprojects {
     }
 }
 
+plugins.withType<JavaPlugin> {
+    configure<JavaPluginExtension> {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(17)
+        }
+    }
+}
+
+plugins.withId("org.jetbrains.kotlin.jvm") {
+    configure<org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension> {
+        jvmToolchain(17)
+    }
+}
+
+plugins.withId("org.jetbrains.kotlin.android") {
+    configure<org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension> {
+        jvmToolchain(17)
+    }
+}
+
 val newBuildDir: Directory =
     rootProject.layout.buildDirectory
         .dir("../../build")
