@@ -2,10 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../models/account.dart';
-import '../models/user.dart';
 
 import '../screens/account_detail_screen.dart';
-import '../screens/chat_screen.dart';
 
 class AccountCard extends StatelessWidget {
   final GameAccount account;

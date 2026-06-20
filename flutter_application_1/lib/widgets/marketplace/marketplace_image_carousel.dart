@@ -74,7 +74,7 @@ class _MarketplaceImageCarouselState extends State<MarketplaceImageCarousel> {
                         color: Colors.grey.shade200,
                         child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
                       ),
-                      errorWidget: (context, _, __) => Container(
+                      errorWidget: (context, _, _) => Container(
                         color: Colors.grey.shade200,
                         alignment: Alignment.center,
                         child: const Icon(Icons.image_not_supported, size: 44, color: Color(0xFF6B6B6B)),

@@ -173,32 +173,33 @@ class _RegisterScreenState extends State<RegisterScreen> {
       
       if (!mounted) return;
 
-      // Show success message
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Registration successful! Sending verification email...')),
-      );
-
-      // Send verification email
+      // Send verification email while still logged in
+      bool emailSent = false;
+      String? emailError;
       try {
         await context.read<AuthProvider>().sendEmailVerification();
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Verification email sent! Please check your inbox.')),
-          );
-        }
+        emailSent = true;
       } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to send verification email: $e')),
-          );
-        }
+        emailError = e.toString();
       }
 
-      // Navigate to login screen after a brief delay
-      await Future.delayed(const Duration(seconds: 2));
-      if (mounted) {
-        Navigator.of(context).pop();
+      // Log out immediately so main.dart doesn't transition to the home shell with an unverified session
+      if (!mounted) return;
+      await context.read<AuthProvider>().logout();
+      
+      if (!mounted) return;
+
+      if (emailSent) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Registration successful! Verification email sent. Please check your inbox.')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Registration successful! But verification email failed: $emailError')),
+        );
       }
+
+      Navigator.of(context).pop(); // Go back to login screen
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);

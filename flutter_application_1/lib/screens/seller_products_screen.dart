@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:provider/provider.dart';
 
 import '../models/product.dart';
-import '../providers/auth_provider.dart';
 import '../screens/create_listing_screen.dart';
 import '../screens/edit_listing_screen.dart';
-import '../widgets/marketplace/marketplace_product_card.dart';
 
 class SellerProductsScreen extends StatelessWidget {
   final String sellerId;

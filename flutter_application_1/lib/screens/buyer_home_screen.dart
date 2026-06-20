@@ -176,7 +176,7 @@ class _CategoryChip extends StatelessWidget {
       },
       selectedColor: colorScheme.primary.withOpacity(0.2),
       checkmarkColor: colorScheme.primary,
-      backgroundColor: colorScheme.surfaceVariant,
+      backgroundColor: colorScheme.surfaceContainerHighest,
       labelStyle: TextStyle(
         color: isSelected ? colorScheme.primary : colorScheme.onSurfaceVariant,
       ),

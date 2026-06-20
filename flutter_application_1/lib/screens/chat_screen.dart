@@ -40,9 +40,9 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-  late final TextEditingController _messageController;
-  late final ScrollController _scrollController;
-  late final ChatService _chatService;
+  final TextEditingController _messageController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+  final ChatService _chatService = ChatService();
   late String myId;
   late String myRole;
   late String chatId;

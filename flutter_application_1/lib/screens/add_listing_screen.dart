@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../models/account.dart';
 
 class AddListingScreen extends StatefulWidget {
   const AddListingScreen({super.key});

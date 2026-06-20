@@ -30,9 +30,7 @@ class PurchasedItemsScreen extends StatelessWidget {
                       context,
                       MaterialPageRoute(
                         builder: (_) => OrderDetailScreen(
-                          account: account,
                           orderId: 'ORD-2024-${1000 + index}',
-                          purchaseDate: DateTime.now().subtract(const Duration(days: 2)),
                         ),
                       ),
                     );

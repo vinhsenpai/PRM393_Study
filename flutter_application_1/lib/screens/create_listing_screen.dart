@@ -25,7 +25,7 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
   final _tagsController = TextEditingController();
   final ProductService _productService = ProductService();
   final StorageService _storageService = StorageService();
-  List<File> _selectedImages = [];
+  final List<File> _selectedImages = [];
   List<String> _imageUrls = [];
   bool _isLoading = false;
   ProductStatus _selectedStatus = ProductStatus.available;
@@ -279,7 +279,7 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
                     
                     // Status Selector
                     DropdownButtonFormField<ProductStatus>(
-                      value: _selectedStatus,
+                      initialValue: _selectedStatus,
                       decoration: const InputDecoration(
                         labelText: 'Stock Status',
                         border: OutlineInputBorder(),

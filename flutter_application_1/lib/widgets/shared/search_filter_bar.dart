@@ -7,12 +7,12 @@ class SearchFilterBar extends StatelessWidget {
   final String selectedFilter;
 
   const SearchFilterBar({
-    Key? key,
+    super.key,
     required this.searchController,
     required this.onSearchChanged,
     required this.onFilterChanged,
     required this.selectedFilter,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

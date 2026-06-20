@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../models/product.dart';
-import '../models/user.dart';
 import '../services/product_service.dart';
 import '../services/chat_service.dart';
 import '../screens/create_listing_screen.dart';

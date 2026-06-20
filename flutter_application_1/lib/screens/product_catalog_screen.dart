@@ -44,7 +44,7 @@ class ProductCatalogScreen extends StatelessWidget {
 }
 
 class _ProductCatalogBody extends StatefulWidget {
-  const _ProductCatalogBody({super.key});
+  const _ProductCatalogBody();
 
   @override
   State<_ProductCatalogBody> createState() => _ProductCatalogBodyState();
@@ -98,7 +98,7 @@ class _ProductCatalogBodyState extends State<_ProductCatalogBody> {
                     padding: const EdgeInsets.fromLTRB(14, 12, 14, 18),
                     sliver: SliverList.separated(
                       itemCount: products.length,
-                      separatorBuilder: (_, __) =>
+                      separatorBuilder: (_, _) =>
                           const SizedBox(height: 14),
                       itemBuilder: (context, index) {
                         final product = products[index];
@@ -142,7 +142,7 @@ class _ProductCatalogBodyState extends State<_ProductCatalogBody> {
     return ListView.separated(
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 18),
       itemCount: 8,
-      separatorBuilder: (_, __) => const SizedBox(height: 14),
+      separatorBuilder: (_, _) => const SizedBox(height: 14),
       itemBuilder: (context, i) {
         return Container(
           decoration: BoxDecoration(

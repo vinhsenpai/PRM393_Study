@@ -9,12 +9,12 @@ class BillingSection extends StatelessWidget {
   final double total;
 
   const BillingSection({
-    Key? key,
+    super.key,
     required this.subtotal,
     required this.tax,
     required this.serviceFee,
     required this.total,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

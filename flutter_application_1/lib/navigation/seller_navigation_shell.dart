@@ -24,7 +24,7 @@ class _SellerNavigationShellState extends State<SellerNavigationShell> {
     final auth = context.read<AuthProvider>();
     final sellerId = auth.currentUser?.id ?? '';
 
-    final List<Widget> _pages = [
+    final List<Widget> pages = [
       SellerDashboardScreen(sellerId: sellerId),
       SellerProductsScreen(sellerId: sellerId),
       SellerOrdersScreen(sellerId: sellerId),
@@ -32,7 +32,7 @@ class _SellerNavigationShellState extends State<SellerNavigationShell> {
       SellerProfileScreen(),
     ];
 
-    void _onItemTapped(int index) {
+    void onItemTapped(int index) {
       setState(() {
         _currentIndex = index;
       });
@@ -41,11 +41,11 @@ class _SellerNavigationShellState extends State<SellerNavigationShell> {
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
-        children: _pages,
+        children: pages,
       ),
       bottomNavigationBar: SellerBottomNav(
         currentIndex: _currentIndex,
-        onTap: _onItemTapped,
+        onTap: onItemTapped,
       ),
     );
   }

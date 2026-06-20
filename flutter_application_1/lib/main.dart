@@ -18,8 +18,7 @@ import 'providers/auth_provider.dart';
 import 'screens/login_screen.dart';
 import 'navigation/buyer_navigation_shell.dart';
 import 'navigation/seller_navigation_shell.dart';
-import 'screens/admin_home_screen.dart';
-import 'screens/verify_email_screen.dart';
+import 'screens/admin_dashboard_screen.dart';
 import 'screens/email_verification_required_screen.dart';
 
 
@@ -103,7 +102,7 @@ class GameAcctHubApp extends StatelessWidget {
   if (snapshot.data == true) {
   switch (auth.currentUser?.role) {
     case UserRole.admin:
-      return const AdminHomeScreen();
+      return const AdminDashboardScreen();
 
     case UserRole.seller:
       return const SellerNavigationShell();

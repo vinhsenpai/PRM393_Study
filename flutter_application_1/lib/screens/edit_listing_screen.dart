@@ -32,11 +32,11 @@ class _EditListingScreenState extends State<EditListingScreen> {
   final _tagsController = TextEditingController();
   final ProductService _productService = ProductService();
   final StorageService _storageService = StorageService();
-  List<File> _selectedImages = [];
+  final List<File> _selectedImages = [];
   List<String> _imageUrls = [];
   bool _isLoading = false;
   ProductStatus _selectedStatus = ProductStatus.available;
-  bool _isInitialized = false;
+  final bool _isInitialized = false;
 
   @override
   void initState() {
@@ -311,7 +311,7 @@ class _EditListingScreenState extends State<EditListingScreen> {
                     
                     // Status Selector
                     DropdownButtonFormField<ProductStatus>(
-                      value: _selectedStatus,
+                      initialValue: _selectedStatus,
                       decoration: const InputDecoration(
                         labelText: 'Stock Status',
                         border: OutlineInputBorder(),

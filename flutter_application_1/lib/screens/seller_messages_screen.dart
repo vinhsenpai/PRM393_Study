@@ -1,8 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../models/user.dart';
-import '../services/chat_service.dart';
-import '../models/message.dart';
 import '../screens/chat_screen.dart';
 import '../theme/app_theme.dart';
 import '../widgets/conversation_tile.dart';

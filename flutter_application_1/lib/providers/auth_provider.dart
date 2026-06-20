@@ -70,7 +70,11 @@ class AuthProvider with ChangeNotifier {
     Future<void> register(String name, String email, String password, UserRole role) async {
      try {
        final userCredential = await _authService.signUpWithEmailPassword(email, password);
-       await _authService.createOrUpdateUserInFirestore(userCredential);
+       await _authService.createOrUpdateUserInFirestore(
+         userCredential,
+         displayName: name,
+         role: role.toString().split('.').last,
+       );
 
        final fbUser = userCredential.user;
        final uid = fbUser?.uid;
@@ -109,7 +113,31 @@ class AuthProvider with ChangeNotifier {
 
   /// Checks if the current user's email is verified.
   Future<bool> isEmailVerified() async {
-    return await _authService.isEmailVerified();
+    final isVerified = await _authService.isEmailVerified();
+    if (isVerified && _currentUser != null && !_currentUser!.emailVerified) {
+      try {
+        await _authService.firestore.collection('users').doc(_currentUser!.id).update({
+          'emailVerified': true,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+
+        _currentUser = User(
+          id: _currentUser!.id,
+          email: _currentUser!.email,
+          name: _currentUser!.name,
+          photoUrl: _currentUser!.photoUrl,
+          role: _currentUser!.role,
+          provider: _currentUser!.provider,
+          emailVerified: true,
+          createdAt: _currentUser!.createdAt,
+          updatedAt: DateTime.now(),
+        );
+        notifyListeners();
+      } catch (e) {
+        // Silently log or ignore update errors during checking
+      }
+    }
+    return isVerified;
   }
 
   Future<void> signInWithGoogle() async {

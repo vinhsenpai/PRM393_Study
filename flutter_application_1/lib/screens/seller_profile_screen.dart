@@ -64,7 +64,7 @@ class SellerProfileScreen extends StatelessWidget {
                   ListTile(
                     leading: const Icon(Icons.store),
                     title: Text(
-                      user.name?.isNotEmpty ?? false ? user.name! : 'No name set',
+                      user.name.isNotEmpty ?? false ? user.name : 'No name set',
                       style: const TextStyle(fontSize: 18),
                     ),
                   ),

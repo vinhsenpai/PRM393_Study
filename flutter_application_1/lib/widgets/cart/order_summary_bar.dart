@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import '../../models/cart_item.dart';
 
 
 class OrderSummaryBar extends StatelessWidget {

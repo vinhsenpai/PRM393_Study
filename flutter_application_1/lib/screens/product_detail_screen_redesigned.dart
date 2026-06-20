@@ -8,7 +8,6 @@ import '../screens/chat_screen.dart';
 import '../widgets/marketplace/marketplace_image_carousel.dart';
 import '../widgets/marketplace/marketplace_widgets.dart';
 import '../widgets/marketplace/sticky_product_action_bar.dart';
-import '../theme/app_theme.dart';
 
 class ProductDetailScreenRedesigned extends StatelessWidget {
   final Product product;

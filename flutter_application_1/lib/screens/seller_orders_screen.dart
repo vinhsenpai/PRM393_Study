@@ -14,7 +14,7 @@ import 'seller_order_detail_screen.dart';
 class SellerOrdersScreen extends StatefulWidget {
   final String sellerId;
 
-  const SellerOrdersScreen({Key? key, required this.sellerId}) : super(key: key);
+  const SellerOrdersScreen({super.key, required this.sellerId});
 
   @override
   State<SellerOrdersScreen> createState() => _SellerOrdersScreenState();
@@ -24,7 +24,7 @@ class _SellerOrdersScreenState extends State<SellerOrdersScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   String _selectedFilter = 'All'; // All, Pending, Processing, Completed, Cancelled
-  bool _isSearching = false;
+  final bool _isSearching = false;
 
   @override
   void dispose() {
