@@ -6,7 +6,6 @@ import '../providers/auth_provider.dart';
 import '../services/product_service.dart';
 import '../widgets/marketplace/marketplace_product_card.dart';
 import '../widgets/marketplace/marketplace_widgets.dart';
-import 'product_detail_screen_redesigned.dart';
 
 // Backward compatible alias: the catalog screen previously referenced a widget
 // named `ProductDetailScreen`. This project uses `ProductDetailScreenRedesigned`.
@@ -96,37 +95,43 @@ class _ProductCatalogBodyState extends State<_ProductCatalogBody> {
                 slivers: [
                   SliverPadding(
                     padding: const EdgeInsets.fromLTRB(14, 12, 14, 18),
-                    sliver: SliverList.separated(
-                      itemCount: products.length,
-                      separatorBuilder: (_, _) =>
-                          const SizedBox(height: 14),
-                      itemBuilder: (context, index) {
-                        final product = products[index];
+                    sliver: SliverGrid(
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        childAspectRatio: 0.66,
+                        crossAxisSpacing: 14,
+                        mainAxisSpacing: 14,
+                      ),
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          final product = products[index];
 
-                        return MarketplaceProductCard(
-                          product: product,
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => detail
-                                    .ProductDetailScreenRedesigned(
-                                  product: product,
+                          return MarketplaceProductCard(
+                            product: product,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => detail
+                                      .ProductDetailScreenRedesigned(
+                                    product: product,
+                                  ),
                                 ),
-                              ),
-                            );
-                          },
-                          onFavorite: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content:
-                                    Text('Favorites coming soon'),
-                              ),
-                            );
-                          },
-                          isFavorite: false,
-                        );
-                      },
+                              );
+                            },
+                            onFavorite: () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content:
+                                      Text('Favorites coming soon'),
+                                ),
+                              );
+                            },
+                            isFavorite: false,
+                          );
+                        },
+                        childCount: products.length,
+                      ),
                     ),
                   ),
                 ],
@@ -139,75 +144,70 @@ class _ProductCatalogBodyState extends State<_ProductCatalogBody> {
   }
 
   Widget _buildLoading() {
-    return ListView.separated(
+    return GridView.builder(
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 18),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        childAspectRatio: 0.66,
+        crossAxisSpacing: 14,
+        mainAxisSpacing: 14,
+      ),
       itemCount: 8,
-      separatorBuilder: (_, _) => const SizedBox(height: 14),
       itemBuilder: (context, i) {
         return Container(
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.06),
-                blurRadius: 16,
-                offset: const Offset(0, 10),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
               ),
             ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: 10),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                child: AspectRatio(
-                  aspectRatio: 16 / 9,
+              AspectRatio(
+                aspectRatio: 1 / 1,
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
                   child: MarketplaceShimmerSkeleton(
-                    height: 200,
+                    height: double.infinity,
                     width: double.infinity,
-                    borderRadius:
-                        const BorderRadius.all(Radius.circular(14)),
                   ),
                 ),
               ),
-              const SizedBox(height: 12),
               Padding(
-                padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+                padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     MarketplaceShimmerSkeleton(
                       height: 16,
-                      width: MediaQuery.sizeOf(context).width * 0.6,
-                      borderRadius:
-                          const BorderRadius.all(Radius.circular(8)),
+                      width: double.infinity,
+                      borderRadius: const BorderRadius.all(Radius.circular(8)),
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 6),
                     MarketplaceShimmerSkeleton(
                       height: 12,
-                      width: MediaQuery.sizeOf(context).width * 0.35,
-                      borderRadius:
-                          const BorderRadius.all(Radius.circular(8)),
+                      width: 80,
+                      borderRadius: const BorderRadius.all(Radius.circular(8)),
                     ),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 12),
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         MarketplaceShimmerSkeleton(
                           height: 20,
-                          width:
-                              MediaQuery.sizeOf(context).width * 0.3,
-                          borderRadius:
-                              const BorderRadius.all(Radius.circular(10)),
+                          width: 60,
+                          borderRadius: const BorderRadius.all(Radius.circular(8)),
                         ),
-                        const Spacer(),
                         MarketplaceShimmerSkeleton(
-                          height: 22,
-                          width:
-                              MediaQuery.sizeOf(context).width * 0.22,
-                          borderRadius:
-                              const BorderRadius.all(Radius.circular(999)),
+                          height: 20,
+                          width: 40,
+                          borderRadius: const BorderRadius.all(Radius.circular(999)),
                         ),
                       ],
                     ),

@@ -26,6 +26,71 @@ class SellerProductsScreen extends StatelessWidget {
     }
   }
 
+  Widget _buildStatusBadge(BuildContext context, ProductStatus status) {
+    Color color;
+    switch (status) {
+      case ProductStatus.available:
+        color = Colors.green;
+        break;
+      case ProductStatus.reserved:
+        color = Colors.orange;
+        break;
+      case ProductStatus.sold:
+        color = Colors.blue;
+        break;
+      case ProductStatus.hidden:
+        color = Colors.grey;
+        break;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.5)),
+      ),
+      child: Text(
+        status.toString().split('.').last.toUpperCase(),
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+          color: color,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _updateProductStatus(BuildContext context, String productId, ProductStatus newStatus) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('products')
+          .doc(productId)
+          .update({
+            'stockStatus': newStatus.toString().split('.').last,
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Status updated to ${newStatus.toString().split('.').last.toUpperCase()}'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 1),
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error updating status: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -106,9 +171,35 @@ class SellerProductsScreen extends StatelessWidget {
                         )
                       : const Icon(Icons.videogame_asset, size: 50),
                   title: Text(product.title),
-                  subtitle: Text('${product.game} - \$${product.price.toStringAsFixed(0)}'),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('${product.game} - \$${product.price.toStringAsFixed(0)}'),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          const Text('Status: ', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                          _buildStatusBadge(context, product.stockStatus),
+                        ],
+                      ),
+                    ],
+                  ),
+                  trailing: PopupMenuButton<ProductStatus>(
+                    icon: const Icon(Icons.more_vert),
+                    tooltip: 'Change Status',
+                    onSelected: (ProductStatus newStatus) {
+                      _updateProductStatus(context, product.id, newStatus);
+                    },
+                    itemBuilder: (BuildContext context) {
+                      return ProductStatus.values.map((status) {
+                        return PopupMenuItem<ProductStatus>(
+                          value: status,
+                          child: Text(status.toString().split('.').last.toUpperCase()),
+                        );
+                      }).toList();
+                    },
+                  ),
                   onTap: () {
-                    // TODO: Navigate to edit product screen
                     Navigator.push(
                       context,
                       MaterialPageRoute(

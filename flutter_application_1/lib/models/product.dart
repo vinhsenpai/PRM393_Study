@@ -10,6 +10,8 @@ class Product {
   final List<String> imageUrls;
   final List<String> tags;
   final ProductStatus stockStatus;
+  final String accountName;
+  final String password;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -23,6 +25,8 @@ class Product {
     required this.imageUrls,
     required this.tags,
     required this.stockStatus,
+    required this.accountName,
+    required this.password,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -39,6 +43,8 @@ class Product {
       imageUrls: List<String>.from(data['imageUrls'] ?? []),
       tags: List<String>.from(data['tags'] ?? []),
       stockStatus: _parseProductStatus(data['stockStatus']),
+      accountName: data['accountName'] as String? ?? '',
+      password: data['password'] as String? ?? '',
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       updatedAt: (data['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
@@ -72,6 +78,8 @@ class Product {
       'imageUrls': imageUrls,
       'tags': tags,
       'stockStatus': stockStatus.toString().split('.').last,
+      'accountName': accountName,
+      'password': password,
       'createdAt': Timestamp.fromDate(createdAt),
       'updatedAt': Timestamp.fromDate(updatedAt),
     };

@@ -44,20 +44,7 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  runApp(
-
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => AuthProvider()),
-        ChangeNotifierProvider(create: (_) => AccountProvider()),
-        ChangeNotifierProvider(
-          create: (context) => CartProvider()..loadCart(),
-        ),
-
-      ],
-      child: const GameAcctHubApp(),
-    ),
-  );
+  runApp(const GameAcctHubApp());
 }
 
 class GameAcctHubApp extends StatelessWidget {
@@ -65,8 +52,16 @@ class GameAcctHubApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'GameAcctHub',
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => AccountProvider()),
+        ChangeNotifierProvider(
+          create: (context) => CartProvider()..loadCart(),
+        ),
+      ],
+      child: MaterialApp(
+        title: 'GameAcctHub',
       theme: AppTheme.lightTheme,
       debugShowCheckedModeBanner: false,
       home: Consumer<AuthProvider>(
@@ -119,6 +114,6 @@ class GameAcctHubApp extends StatelessWidget {
           );
         },
       ),
-    );
+    ),);
   }
 }

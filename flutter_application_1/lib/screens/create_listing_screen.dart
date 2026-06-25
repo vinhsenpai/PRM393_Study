@@ -23,12 +23,13 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
   final _gameController = TextEditingController();
   final _priceController = TextEditingController();
   final _tagsController = TextEditingController();
+  final _accountNameController = TextEditingController();
+  final _passwordController = TextEditingController();
   final ProductService _productService = ProductService();
   final StorageService _storageService = StorageService();
   final List<File> _selectedImages = [];
   List<String> _imageUrls = [];
   bool _isLoading = false;
-  ProductStatus _selectedStatus = ProductStatus.available;
 
   @override
   void dispose() {
@@ -37,6 +38,8 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
     _gameController.dispose();
     _priceController.dispose();
     _tagsController.dispose();
+    _accountNameController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
@@ -104,7 +107,9 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
             .map((tag) => tag.trim())
             .where((tag) => tag.isNotEmpty)
             .toList(),
-        stockStatus: _selectedStatus,
+        stockStatus: ProductStatus.available,
+        accountName: _accountNameController.text.trim(),
+        password: _passwordController.text.trim(),
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
@@ -122,10 +127,11 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
         _gameController.clear();
         _priceController.clear();
         _tagsController.clear();
+        _accountNameController.clear();
+        _passwordController.clear();
         setState(() {
           _selectedImages.clear();
           _imageUrls = [];
-          _selectedStatus = ProductStatus.available;
         });
       }
     } catch (e) {
@@ -276,23 +282,34 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    
-                    // Status Selector
-                    DropdownButtonFormField<ProductStatus>(
-                      initialValue: _selectedStatus,
+                    TextFormField(
+                      controller: _accountNameController,
                       decoration: const InputDecoration(
-                        labelText: 'Stock Status',
+                        labelText: 'Account Name / Username',
                         border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.inventory),
+                        prefixIcon: Icon(Icons.account_box),
                       ),
-                      items: ProductStatus.values.map((status) => DropdownMenuItem(
-                        value: status,
-                        child: Text(status.toString().split('.').last.toUpperCase()),
-                      )).toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          _selectedStatus = value!;
-                        });
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Please enter the account name or username';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _passwordController,
+                      decoration: const InputDecoration(
+                        labelText: 'Password',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.lock),
+                      ),
+                      obscureText: true,
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Please enter the password';
+                        }
+                        return null;
                       },
                     ),
                     const SizedBox(height: 24),

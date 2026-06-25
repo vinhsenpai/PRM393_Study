@@ -85,8 +85,16 @@ class AuthService {
 
   /// Logout from Firebase and Google.
   Future<void> logout() async {
-    await _auth.signOut();
-    await _googleSignIn.signOut();
+    try {
+      await _auth.signOut();
+    } catch (e) {
+      // Ignored
+    }
+    try {
+      await _googleSignIn.signOut();
+    } catch (e) {
+      // Ignored / Google Sign-In might not be initialized on Edge/Web
+    }
   }
 
     /// Creates/updates Firestore user document at users/{uid}.

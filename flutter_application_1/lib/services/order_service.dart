@@ -46,13 +46,26 @@ class OrderService {
     // Create order items
     final List<OrderItem> orderItems = [];
     for (var item in cartItems) {
+      final productId = item['productId'] ?? '';
+      // Fetch product document to retrieve credentials
+      final productDoc = await _firestore.collection('products').doc(productId).get();
+      String accountName = '';
+      String password = '';
+      if (productDoc.exists) {
+        final productData = productDoc.data();
+        accountName = productData?['accountName'] ?? '';
+        password = productData?['password'] ?? '';
+      }
+
       orderItems.add(
         OrderItem(
-          productId: item['productId'] ?? '',
+          productId: productId,
           title: item['title'] ?? '',
           price: item['price'] as double,
           quantity: item['quantity'] as int,
           imageUrl: item['imageUrl'] ?? '',
+          accountName: accountName,
+          password: password,
         ),
       );
     }
@@ -72,10 +85,18 @@ class OrderService {
       tax: tax,
       serviceFee: serviceFee,
       totalAmount: totalAmount,
-      status: 'pending',
+      status: 'completed',
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
     );
+
+    // Update product stockStatus to sold
+    for (var item in orderItems) {
+      await _firestore.collection('products').doc(item.productId).update({
+        'stockStatus': 'sold',
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    }
 
     await orderDoc.set(order.toMap());
 
