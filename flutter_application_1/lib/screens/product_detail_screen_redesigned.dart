@@ -130,7 +130,13 @@ class ProductDetailScreenRedesigned extends StatelessWidget {
                 try {
                   final sellerDoc = await FirebaseFirestore.instance.collection('users').doc(sellerId).get();
                   if (sellerDoc.exists) {
-                    sellerName = sellerDoc.data()?['name'] ?? 'Seller';
+                    final name = sellerDoc.data()?['name'] as String?;
+                    final email = sellerDoc.data()?['email'] as String?;
+                    if (name != null && name.trim().isNotEmpty && name != 'No name set') {
+                      sellerName = name;
+                    } else if (email != null && email.trim().isNotEmpty) {
+                      sellerName = email;
+                    }
                   }
                 } catch (e) {
                   // Ignored
@@ -139,7 +145,10 @@ class ProductDetailScreenRedesigned extends StatelessWidget {
                 if (context.mounted) {
                   Navigator.pop(context); // Dismiss loading dialog
 
-                  final buyerName = auth.currentUser?.name ?? 'Buyer';
+                  final rawName = auth.currentUser?.name ?? '';
+                  final email = auth.currentUser?.email ?? 'Buyer';
+                  final buyerName = (rawName.trim().isNotEmpty && rawName != 'No name set') ? rawName : email;
+                  
                   Navigator.push(
                     context,
                     MaterialPageRoute(

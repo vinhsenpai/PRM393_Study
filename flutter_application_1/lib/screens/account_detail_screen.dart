@@ -171,7 +171,6 @@ Widget _buildBottomActions(BuildContext context) {
               onPressed: () {
                 final auth = context.read<AuthProvider>();
                 final buyerId = auth.currentUser?.id ?? '';
-                final buyerName = auth.currentUser?.name ?? 'Buyer';
                 
                 if (buyerId.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -179,6 +178,10 @@ Widget _buildBottomActions(BuildContext context) {
                   );
                   return;
                 }
+
+                final rawName = auth.currentUser?.name ?? '';
+                final email = auth.currentUser?.email ?? 'Buyer';
+                final buyerName = (rawName.trim().isNotEmpty && rawName != 'No name set') ? rawName : email;
 
                 Navigator.push(
                   context,
