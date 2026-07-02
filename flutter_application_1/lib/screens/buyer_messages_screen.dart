@@ -81,7 +81,8 @@ class _BuyerMessagesScreenState extends State<BuyerMessagesScreen> {
             itemCount: filteredChats.length,
             itemBuilder: (context, index) {
               final chat = filteredChats[index];
-              final sellerName = chat['sellerName'] ?? 'Unknown Seller';
+              final sellerId = chat['sellerId'] ?? '';
+              final sellerName = chat['sellerName'] as String? ?? '';
               final lastMsg = chat['lastMessage'] ?? 'No messages yet';
               final productTitle = chat['productTitle'] ?? 'Product';
               
@@ -90,26 +91,13 @@ class _BuyerMessagesScreenState extends State<BuyerMessagesScreen> {
                 updatedAt = (chat['updatedAt'] as Timestamp).toDate();
               }
 
-              return ConversationTile(
-                leadingText: sellerName,
-                subtitleText: '$productTitle: $lastMsg',
-                trailingText: DateFormat.jm().format(updatedAt),
-                unreadCount: 0,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ChatScreen(
-                        buyerId: chat['buyerId'] ?? '',
-                        buyerName: chat['buyerName'] ?? 'Buyer',
-                        sellerId: chat['sellerId'] ?? '',
-                        sellerName: sellerName,
-                        productId: chat['productId'] ?? '',
-                        productTitle: productTitle,
-                      ),
-                    ),
-                  );
-                },
+              return SellerConversationTile(
+                chat: chat,
+                sellerId: sellerId,
+                sellerName: sellerName,
+                lastMsg: lastMsg,
+                productTitle: productTitle,
+                updatedAt: updatedAt,
               );
             },
           );
@@ -148,6 +136,93 @@ class _BuyerMessagesScreenState extends State<BuyerMessagesScreen> {
           ),
         ],
       ),
+    );
+  }
+}
+
+// Widget con đại diện cho mỗi Tile để cô lập Future và tránh vòng lặp rebuild vô hạn
+class SellerConversationTile extends StatefulWidget {
+  final Map<String, dynamic> chat;
+  final String sellerId;
+  final String sellerName;
+  final String lastMsg;
+  final String productTitle;
+  final DateTime updatedAt;
+
+  const SellerConversationTile({
+    super.key,
+    required this.chat,
+    required this.sellerId,
+    required this.sellerName,
+    required this.lastMsg,
+    required this.productTitle,
+    required this.updatedAt,
+  });
+
+  @override
+  State<SellerConversationTile> createState() => _SellerConversationTileState();
+}
+
+class _SellerConversationTileState extends State<SellerConversationTile> {
+  late Future<DocumentSnapshot> _fetchUserFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    // Khởi tạo Future đúng 1 lần duy nhất trong initState để tránh tạo Future liên tục khi build
+    _fetchUserFuture = FirebaseFirestore.instance.collection('users').doc(widget.sellerId).get();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Nếu sellerName đã hợp lệ và không trống, hiển thị trực tiếp
+    if (widget.sellerName.trim().isNotEmpty &&
+        widget.sellerName != 'Unknown Seller' &&
+        widget.sellerName != 'No name set') {
+      return _buildTile(widget.sellerName);
+    }
+
+    // Nếu trống hoặc là tên mặc định, dùng FutureBuilder đã được gán Future cố định
+    return FutureBuilder<DocumentSnapshot>(
+      future: _fetchUserFuture,
+      builder: (context, snapshot) {
+        String displayName = widget.sellerName.isEmpty ? 'Seller' : widget.sellerName;
+        if (snapshot.hasData && snapshot.data!.exists) {
+          final data = snapshot.data!.data() as Map<String, dynamic>?;
+          final name = data?['name'] as String?;
+          final email = data?['email'] as String?;
+          if (name != null && name.trim().isNotEmpty && name != 'No name set') {
+            displayName = name;
+          } else if (email != null && email.trim().isNotEmpty) {
+            displayName = email;
+          }
+        }
+        return _buildTile(displayName);
+      },
+    );
+  }
+
+  Widget _buildTile(String displayName) {
+    return ConversationTile(
+      leadingText: displayName,
+      subtitleText: '${widget.productTitle}: ${widget.lastMsg}',
+      trailingText: DateFormat.jm().format(widget.updatedAt),
+      unreadCount: 0,
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ChatScreen(
+              buyerId: widget.chat['buyerId'] ?? '',
+              buyerName: widget.chat['buyerName'] ?? 'Buyer',
+              sellerId: widget.sellerId,
+              sellerName: displayName,
+              productId: widget.chat['productId'] ?? '',
+              productTitle: widget.productTitle,
+            ),
+          ),
+        );
+      },
     );
   }
 }
