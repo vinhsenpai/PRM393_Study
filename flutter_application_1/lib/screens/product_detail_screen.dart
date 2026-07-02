@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../models/product.dart';
 import '../providers/auth_provider.dart';
@@ -102,7 +103,7 @@ class ProductDetailScreen extends StatelessWidget {
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
-onPressed: () async {
+                onPressed: () async {
                   await cart.addToCart(product);
 
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -121,19 +122,44 @@ onPressed: () async {
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   side: BorderSide(color: AppTheme.primaryColor.withValues(alpha: 0.7)),
                 ),
-                onPressed: () {
+                onPressed: () async {
                   if (sellerId.isEmpty) return;
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ChatScreen(
-                        buyerId: buyerId,
-                        sellerId: sellerId,
-                        productId: product.id,
-                        productTitle: product.title,
-                      ),
-                    ),
+
+                  // Show loading indicator
+                  showDialog(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (context) => const Center(child: CircularProgressIndicator()),
                   );
+
+                  String sellerName = 'Seller';
+                  try {
+                    final sellerDoc = await FirebaseFirestore.instance.collection('users').doc(sellerId).get();
+                    if (sellerDoc.exists) {
+                      sellerName = sellerDoc.data()?['name'] ?? 'Seller';
+                    }
+                  } catch (e) {
+                    // Ignored
+                  }
+
+                  if (context.mounted) {
+                    Navigator.pop(context); // Dismiss loading dialog
+
+                    final buyerName = auth.currentUser?.name ?? 'Buyer';
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ChatScreen(
+                          buyerId: buyerId,
+                          buyerName: buyerName,
+                          sellerId: sellerId,
+                          sellerName: sellerName,
+                          productId: product.id,
+                          productTitle: product.title,
+                        ),
+                      ),
+                    );
+                  }
                 },
                 icon: const Icon(Icons.chat_bubble_outline),
                 label: const Text('Chat với seller'),

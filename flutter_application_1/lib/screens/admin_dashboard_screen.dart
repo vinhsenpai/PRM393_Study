@@ -50,7 +50,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
         onPressed: () {
           Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatScreen(
             buyerId: 'admin', 
+            buyerName: 'System Admin',
             sellerId: 'support', 
+            sellerName: 'Support Team',
             productId: 'support_product',
             productTitle: 'Support Chat'
           )));

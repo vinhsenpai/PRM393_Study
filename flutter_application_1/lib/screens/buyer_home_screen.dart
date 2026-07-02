@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../screens/product_catalog_screen.dart';
 import '../screens/order_history_screen.dart';
+import '../screens/buyer_messages_screen.dart';
 import 'cart_screen.dart';
 
 class BuyerHomeScreen extends StatelessWidget {
@@ -141,6 +142,26 @@ class BuyerHomeScreen extends StatelessWidget {
             leading: const Icon(Icons.favorite_border),
             title: const Text('Wishlist'),
             onTap: () {},
+          ),
+          ListTile(
+            leading: const Icon(Icons.chat_bubble_outline),
+            title: const Text('My Chats'),
+            onTap: () {
+              final auth = context.read<AuthProvider>();
+              final buyerId = auth.currentUser?.id ?? '';
+              if (buyerId.isNotEmpty) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => BuyerMessagesScreen(buyerId: buyerId),
+                  ),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Please login to view your chats.')),
+                );
+              }
+            },
           ),
           const Divider(),
           ListTile(

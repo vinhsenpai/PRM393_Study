@@ -5,6 +5,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
 import '../models/account.dart';
 import '../providers/cart_provider.dart';
+import '../providers/auth_provider.dart';
 import 'chat_screen.dart';
 import '_account_detail_cart_mapping.dart';
 
@@ -168,11 +169,28 @@ Widget _buildBottomActions(BuildContext context) {
           Expanded(
             child: OutlinedButton.icon(
               onPressed: () {
+                final auth = context.read<AuthProvider>();
+                final buyerId = auth.currentUser?.id ?? '';
+                final buyerName = auth.currentUser?.name ?? 'Buyer';
+                
+                if (buyerId.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Please login to contact the seller.')),
+                  );
+                  return;
+                }
+
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) =>
-                        ChatScreen.otherUser(otherUser: account.sellerName),
+                    builder: (context) => ChatScreen(
+                      buyerId: buyerId,
+                      buyerName: buyerName,
+                      sellerId: 'mock_seller_${account.sellerName.replaceAll(' ', '_')}',
+                      sellerName: account.sellerName,
+                      productId: 'mock_prod_${account.id}',
+                      productTitle: account.title,
+                    ),
                   ),
                 );
               },

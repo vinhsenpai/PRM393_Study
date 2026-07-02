@@ -6,16 +6,16 @@ import '../theme/app_theme.dart';
 import '../widgets/conversation_tile.dart';
 import 'package:intl/intl.dart';
 
-class SellerMessagesScreen extends StatefulWidget {
-  final String sellerId;
+class BuyerMessagesScreen extends StatefulWidget {
+  final String buyerId;
 
-  const SellerMessagesScreen({super.key, required this.sellerId});
+  const BuyerMessagesScreen({super.key, required this.buyerId});
 
   @override
-  State<SellerMessagesScreen> createState() => _SellerMessagesScreenState();
+  State<BuyerMessagesScreen> createState() => _BuyerMessagesScreenState();
 }
 
-class _SellerMessagesScreenState extends State<SellerMessagesScreen> {
+class _BuyerMessagesScreenState extends State<BuyerMessagesScreen> {
   final ChatService _chatService = ChatService();
   String _searchQuery = '';
 
@@ -23,7 +23,7 @@ class _SellerMessagesScreenState extends State<SellerMessagesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Messages'),
+        title: const Text('My Chats'),
         backgroundColor: AppTheme.primaryColor,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(60),
@@ -36,7 +36,7 @@ class _SellerMessagesScreenState extends State<SellerMessagesScreen> {
                 });
               },
               decoration: InputDecoration(
-                hintText: 'Search conversations...',
+                hintText: 'Search chats...',
                 prefixIcon: const Icon(Icons.search),
                 filled: true,
                 fillColor: Colors.white,
@@ -50,7 +50,7 @@ class _SellerMessagesScreenState extends State<SellerMessagesScreen> {
         ),
       ),
       body: StreamBuilder<List<Map<String, dynamic>>>(
-        stream: _chatService.getChatsForUser(widget.sellerId),
+        stream: _chatService.getChatsForUser(widget.buyerId),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator(color: AppTheme.primaryColor));
@@ -66,11 +66,11 @@ class _SellerMessagesScreenState extends State<SellerMessagesScreen> {
 
           // Filter by search query
           final filteredChats = chats.where((chat) {
-            final buyerName = (chat['buyerName'] as String? ?? '').toLowerCase();
+            final sellerName = (chat['sellerName'] as String? ?? '').toLowerCase();
             final lastMessage = (chat['lastMessage'] as String? ?? '').toLowerCase();
             final productTitle = (chat['productTitle'] as String? ?? '').toLowerCase();
             final query = _searchQuery.toLowerCase();
-            return buyerName.contains(query) || lastMessage.contains(query) || productTitle.contains(query);
+            return sellerName.contains(query) || lastMessage.contains(query) || productTitle.contains(query);
           }).toList();
 
           if (filteredChats.isEmpty) {
@@ -81,7 +81,7 @@ class _SellerMessagesScreenState extends State<SellerMessagesScreen> {
             itemCount: filteredChats.length,
             itemBuilder: (context, index) {
               final chat = filteredChats[index];
-              final buyerName = chat['buyerName'] ?? 'Unknown Buyer';
+              final sellerName = chat['sellerName'] ?? 'Unknown Seller';
               final lastMsg = chat['lastMessage'] ?? 'No messages yet';
               final productTitle = chat['productTitle'] ?? 'Product';
               
@@ -91,7 +91,7 @@ class _SellerMessagesScreenState extends State<SellerMessagesScreen> {
               }
 
               return ConversationTile(
-                leadingText: buyerName,
+                leadingText: sellerName,
                 subtitleText: '$productTitle: $lastMsg',
                 trailingText: DateFormat.jm().format(updatedAt),
                 unreadCount: 0,
@@ -101,9 +101,9 @@ class _SellerMessagesScreenState extends State<SellerMessagesScreen> {
                     MaterialPageRoute(
                       builder: (_) => ChatScreen(
                         buyerId: chat['buyerId'] ?? '',
-                        buyerName: buyerName,
+                        buyerName: chat['buyerName'] ?? 'Buyer',
                         sellerId: chat['sellerId'] ?? '',
-                        sellerName: chat['sellerName'] ?? 'Seller',
+                        sellerName: sellerName,
                         productId: chat['productId'] ?? '',
                         productTitle: productTitle,
                       ),
@@ -130,7 +130,7 @@ class _SellerMessagesScreenState extends State<SellerMessagesScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            'No conversations yet',
+            'No chats yet',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
@@ -139,7 +139,7 @@ class _SellerMessagesScreenState extends State<SellerMessagesScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Conversations with interested buyers will appear here.',
+            'Start a conversation from a product detail page.',
             style: TextStyle(
               fontSize: 14,
               color: Colors.grey[500],

@@ -5,7 +5,14 @@ class ChatService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // Create or get a chat between buyer and seller for a specific product
-  Future<String> getOrCreateChat(String buyerId, String sellerId, String productId) async {
+  Future<String> getOrCreateChat({
+    required String buyerId,
+    required String buyerName,
+    required String sellerId,
+    required String sellerName,
+    required String productId,
+    required String productTitle,
+  }) async {
     // Create chatId in format buyerId_sellerId (sorted to ensure consistency)
     final List<String> ids = [buyerId, sellerId];
     ids.sort();
@@ -19,8 +26,11 @@ class ChatService {
       await _firestore.collection('chats').doc(chatId).set({
         'participants': [buyerId, sellerId],
         'buyerId': buyerId,
+        'buyerName': buyerName,
         'sellerId': sellerId,
+        'sellerName': sellerName,
         'productId': productId,
+        'productTitle': productTitle,
         'lastMessage': '',
         'updatedAt': FieldValue.serverTimestamp(),
       });

@@ -6,6 +6,7 @@ import '../services/chat_service.dart';
 import '../screens/create_listing_screen.dart';
 import '../screens/edit_listing_screen.dart';
 import '../screens/seller_messages_screen.dart';
+import '../screens/chat_screen.dart';
 import '../theme/app_theme.dart';
 import '../widgets/product_card.dart';
 import '../widgets/conversation_tile.dart';
@@ -226,7 +227,21 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
                               DateTime.now(),
                         ),
                         unreadCount: 0,
-                        onTap: () {},
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => ChatScreen(
+                                buyerId: conv['buyerId'] ?? '',
+                                buyerName: conv['buyerName'] ?? 'Unknown Buyer',
+                                sellerId: conv['sellerId'] ?? '',
+                                sellerName: conv['sellerName'] ?? 'Seller',
+                                productId: conv['productId'] ?? '',
+                                productTitle: conv['productTitle'] ?? 'Product',
+                              ),
+                            ),
+                          );
+                        },
                       );
                     },
                   );
