@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 import 'firebase_options.dart';
 
@@ -21,9 +22,6 @@ import 'navigation/seller_navigation_shell.dart';
 import 'screens/admin_dashboard_screen.dart';
 import 'screens/email_verification_required_screen.dart';
 
-
-
-
 import 'models/user.dart';
 
 void main() async {
@@ -37,12 +35,15 @@ void main() async {
     Hive.registerAdapter(CartItemAdapter());
   }
 
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-
-
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  // Khởi tạo Firebase Storage rõ ràng
+  try {
+    final storage = FirebaseStorage.instance;
+    print('Firebase Storage initialized: ${storage.bucket}');
+  } catch (e) {
+    print('Error initializing Firebase Storage: $e');
+  }
 
   runApp(const GameAcctHubApp());
 }
@@ -56,15 +57,13 @@ class GameAcctHubApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => AccountProvider()),
-        ChangeNotifierProvider(
-          create: (context) => CartProvider()..loadCart(),
-        ),
+        ChangeNotifierProvider(create: (context) => CartProvider()..loadCart()),
       ],
       child: MaterialApp(
         title: 'GameAcctHub',
-      theme: AppTheme.lightTheme,
-      debugShowCheckedModeBanner: false,
-      home: Consumer<AuthProvider>(
+        theme: AppTheme.lightTheme,
+        debugShowCheckedModeBanner: false,
+        home: Consumer<AuthProvider>(
           builder: (context, auth, _) {
             if (!auth.isAuthenticated || auth.currentUser == null) {
               return const LoginScreen();
@@ -74,46 +73,47 @@ class GameAcctHubApp extends StatelessWidget {
             return FutureBuilder<bool>(
               future: auth.isEmailVerified(),
 
-            builder: (context, snapshot) {
-              // While checking, show loading indicator
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Scaffold(
-                  body: Center(
-                    child: CircularProgressIndicator(),
-                  ),
-                );
-              }
+              builder: (context, snapshot) {
+                // While checking, show loading indicator
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Scaffold(
+                    body: Center(child: CircularProgressIndicator()),
+                  );
+                }
 
-              // If there was an error checking verification status
-              if (snapshot.hasError) {
-                return Scaffold(
-                  body: Center(
-                    child: Text('Error checking verification status: ${snapshot.error}'),
-                  ),
-                );
-              }
+                // If there was an error checking verification status
+                if (snapshot.hasError) {
+                  return Scaffold(
+                    body: Center(
+                      child: Text(
+                        'Error checking verification status: ${snapshot.error}',
+                      ),
+                    ),
+                  );
+                }
 
-              // If email is verified, proceed to home screen
-  if (snapshot.data == true) {
-  switch (auth.currentUser?.role) {
-    case UserRole.admin:
-      return const AdminDashboardScreen();
+                // If email is verified, proceed to home screen
+                if (snapshot.data == true) {
+                  switch (auth.currentUser?.role) {
+                    case UserRole.admin:
+                      return const AdminDashboardScreen();
 
-    case UserRole.seller:
-      return const SellerNavigationShell();
+                    case UserRole.seller:
+                      return const SellerNavigationShell();
 
-    case UserRole.buyer:
-    default:
-      return const BuyerNavigationShell();
-  }
-}
+                    case UserRole.buyer:
+                    default:
+                      return const BuyerNavigationShell();
+                  }
+                }
 
-              // If email is not verified, show verification required screen
-              return const EmailVerificationRequiredScreen();
-            },
-          );
-        },
+                // If email is not verified, show verification required screen
+                return const EmailVerificationRequiredScreen();
+              },
+            );
+          },
+        ),
       ),
-    ),);
+    );
   }
 }

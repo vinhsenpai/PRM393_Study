@@ -165,25 +165,28 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
                     return const Center(child: Text('No products yet'));
                   }
                   return SizedBox(
-                    height: 120,
+                    height: 220,
                     child: ListView.builder(
                       scrollDirection: Axis.horizontal,
                       itemCount: snapshot.data!.length,
                       itemBuilder: (context, index) {
-                        return ProductCard(
-                          product: snapshot.data![index],
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => EditListingScreen(
-                                  sellerId: sellerId,
-                                  productId: snapshot.data![index].id,
-                                  initialProduct: snapshot.data![index],
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 12),
+                          child: ProductCard(
+                            product: snapshot.data![index],
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => EditListingScreen(
+                                    sellerId: sellerId,
+                                    productId: snapshot.data![index].id,
+                                    initialProduct: snapshot.data![index],
+                                  ),
                                 ),
-                              ),
-                            );
-                          },
+                              );
+                            },
+                          ),
                         );
                       },
                     ),
