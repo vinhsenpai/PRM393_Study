@@ -95,7 +95,7 @@ crossAxisAlignment: CrossAxisAlignment.stretch,
                         fit: BoxFit.cover,
                         width: double.infinity,
                         placeholder: (context, _) => _buildImagePlaceholder(context),
-                        errorWidget: (context, _, __) => _buildImagePlaceholder(context),
+                        errorWidget: (context, _, _) => _buildImagePlaceholder(context),
                       )
                     else
                       _buildImagePlaceholder(context),

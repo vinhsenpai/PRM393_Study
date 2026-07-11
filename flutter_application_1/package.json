@@ -1,0 +1,11 @@
+{
+  "name": "flutter_application_1",
+  "version": "1.0.0",
+  "description": "Flutter Application Wrapper for npm commands",
+  "scripts": {
+    "dev": "flutter run",
+    "dev:chrome": "flutter run -d chrome",
+    "dev:windows": "flutter run -d windows",
+    "dev:edge": "flutter run -d edge"
+  }
+}

@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import 'forgot_password_screen.dart';
 import 'register_screen.dart';
-import 'verify_email_screen.dart';
 
 
 class LoginScreen extends StatefulWidget {
@@ -138,17 +137,6 @@ class _LoginScreenState extends State<LoginScreen> {
             _emailController.text.trim(),
             _passwordController.text,
           );
-
-      // Check if email is verified after login
-      if (!mounted) return;
-
-      final isVerified = await context.read<AuthProvider>().isEmailVerified();
-      if (!isVerified) {
-        // Navigate to verify email screen
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const VerifyEmailScreen()),
-        );
-      }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

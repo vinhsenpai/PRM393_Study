@@ -6,6 +6,8 @@ class OrderItem {
   final double price;
   final int quantity;
   final String imageUrl;
+  final String accountName;
+  final String password;
 
   OrderItem({
     required this.productId,
@@ -13,6 +15,8 @@ class OrderItem {
     required this.price,
     required this.quantity,
     required this.imageUrl,
+    required this.accountName,
+    required this.password,
   });
 
   Map<String, dynamic> toMap() {
@@ -22,6 +26,8 @@ class OrderItem {
       'price': price,
       'quantity': quantity,
       'imageUrl': imageUrl,
+      'accountName': accountName,
+      'password': password,
     };
   }
 
@@ -32,6 +38,8 @@ class OrderItem {
       price: map['price']?.toDouble() ?? 0.0,
       quantity: map['quantity'] ?? 0,
       imageUrl: map['imageUrl'] ?? '',
+      accountName: map['accountName'] ?? '',
+      password: map['password'] ?? '',
     );
   }
 }

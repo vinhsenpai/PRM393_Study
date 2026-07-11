@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:provider/provider.dart';
 
 import '../models/product.dart';
-import '../providers/auth_provider.dart';
 import '../widgets/marketplace/marketplace_product_card.dart';
 
 class FavoritesScreen extends StatelessWidget {

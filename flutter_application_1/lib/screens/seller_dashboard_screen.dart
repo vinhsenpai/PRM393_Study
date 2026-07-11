@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../models/product.dart';
-import '../models/user.dart';
 import '../services/product_service.dart';
 import '../services/chat_service.dart';
 import '../screens/create_listing_screen.dart';
 import '../screens/edit_listing_screen.dart';
 import '../screens/seller_messages_screen.dart';
+import '../screens/chat_screen.dart';
 import '../theme/app_theme.dart';
 import '../widgets/product_card.dart';
 import '../widgets/conversation_tile.dart';
@@ -214,21 +213,29 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
                   if (!snapshot.hasData || snapshot.data!.isEmpty) {
                     return const Center(child: Text('No conversations yet'));
                   }
-                  return ListView.builder(
+                   return ListView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: snapshot.data!.length,
                     itemBuilder: (context, index) {
                       final conv = snapshot.data![index];
-                      return ConversationTile(
-                        leadingText: conv['buyerName'] ?? 'Unknown Buyer',
-                        subtitleText: conv['lastMessage'] ?? 'No messages',
-                        trailingText: DateFormat.jm().format(
-                          (conv['updatedAt'] as Timestamp?)?.toDate() ??
-                              DateTime.now(),
-                        ),
-                        unreadCount: 0,
-                        onTap: () {},
+                      final buyerId = conv['buyerId'] ?? '';
+                      final buyerName = conv['buyerName'] as String? ?? '';
+                      final lastMsg = conv['lastMessage'] ?? 'No messages';
+                      final productTitle = conv['productTitle'] ?? 'Product';
+                      
+                      DateTime updatedAt = DateTime.now();
+                      if (conv['updatedAt'] is Timestamp) {
+                        updatedAt = (conv['updatedAt'] as Timestamp).toDate();
+                      }
+
+                      return DashboardBuyerConversationTile(
+                        chat: conv,
+                        buyerId: buyerId,
+                        buyerName: buyerName,
+                        lastMsg: lastMsg,
+                        productTitle: productTitle,
+                        updatedAt: updatedAt,
                       );
                     },
                   );
@@ -320,3 +327,86 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
   }
 }
 
+// Widget con để cô lập Future query cho Dashboard tránh Infinite Rebuild Loop
+class DashboardBuyerConversationTile extends StatefulWidget {
+  final Map<String, dynamic> chat;
+  final String buyerId;
+  final String buyerName;
+  final String lastMsg;
+  final String productTitle;
+  final DateTime updatedAt;
+
+  const DashboardBuyerConversationTile({
+    super.key,
+    required this.chat,
+    required this.buyerId,
+    required this.buyerName,
+    required this.lastMsg,
+    required this.productTitle,
+    required this.updatedAt,
+  });
+
+  @override
+  State<DashboardBuyerConversationTile> createState() => _DashboardBuyerConversationTileState();
+}
+
+class _DashboardBuyerConversationTileState extends State<DashboardBuyerConversationTile> {
+  late Future<DocumentSnapshot> _fetchUserFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserFuture = FirebaseFirestore.instance.collection('users').doc(widget.buyerId).get();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.buyerName.trim().isNotEmpty &&
+        widget.buyerName != 'Unknown Buyer' &&
+        widget.buyerName != 'No name set') {
+      return _buildTile(widget.buyerName);
+    }
+
+    return FutureBuilder<DocumentSnapshot>(
+      future: _fetchUserFuture,
+      builder: (context, snapshot) {
+        String displayName = widget.buyerName.isEmpty ? 'Buyer' : widget.buyerName;
+        if (snapshot.hasData && snapshot.data!.exists) {
+          final data = snapshot.data!.data() as Map<String, dynamic>?;
+          final name = data?['name'] as String?;
+          final email = data?['email'] as String?;
+          if (name != null && name.trim().isNotEmpty && name != 'No name set') {
+            displayName = name;
+          } else if (email != null && email.trim().isNotEmpty) {
+            displayName = email;
+          }
+        }
+        return _buildTile(displayName);
+      },
+    );
+  }
+
+  Widget _buildTile(String displayName) {
+    return ConversationTile(
+      leadingText: displayName,
+      subtitleText: widget.lastMsg,
+      trailingText: DateFormat.jm().format(widget.updatedAt),
+      unreadCount: 0,
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ChatScreen(
+              buyerId: widget.buyerId,
+              buyerName: displayName,
+              sellerId: widget.chat['sellerId'] ?? '',
+              sellerName: widget.chat['sellerName'] ?? 'Seller',
+              productId: widget.chat['productId'] ?? '',
+              productTitle: widget.productTitle,
+            ),
+          ),
+        );
+      },
+    );
+  }
+}

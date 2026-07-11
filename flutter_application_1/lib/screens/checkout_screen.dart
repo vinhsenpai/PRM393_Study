@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../models/product.dart';
 import '../models/cart_item.dart';
 import '../providers/cart_provider.dart';
 import '../services/order_service.dart';
 import '../theme/app_theme.dart';
-import '../widgets/marketplace/marketplace_product_card.dart';
 import 'order_success_screen.dart';
 
 class CheckoutScreen extends StatefulWidget {

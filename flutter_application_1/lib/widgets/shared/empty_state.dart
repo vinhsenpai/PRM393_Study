@@ -6,11 +6,11 @@ class EmptyState extends StatelessWidget {
   final IconData icon;
 
   const EmptyState({
-    Key? key,
+    super.key,
     required this.message,
     this.subMessage,
     this.icon = Icons.info_outline,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -1,6 +1,6 @@
 plugins {
     id("com.android.application")
-    id("org.jetbrains.kotlin.android") // Add this line!
+    id("org.jetbrains.kotlin.android")
     id("dev.flutter.flutter-gradle-plugin")
     id("com.google.gms.google-services")
 }
@@ -16,9 +16,8 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    // For Kotlin 2.0+, use this instead of kotlinOptions
-    kotlin {
-        jvmToolchain(17)
+    kotlinOptions {
+        jvmTarget = "17"
     }
 
     defaultConfig {

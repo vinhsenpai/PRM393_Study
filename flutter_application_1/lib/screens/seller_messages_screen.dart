@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../models/user.dart';
-import '../services/chat_service.dart';
-import '../models/message.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../screens/chat_screen.dart';
+import '../services/chat_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/conversation_tile.dart';
 import 'package:intl/intl.dart';
@@ -18,57 +16,8 @@ class SellerMessagesScreen extends StatefulWidget {
 }
 
 class _SellerMessagesScreenState extends State<SellerMessagesScreen> {
-  bool _isLoading = true;
-  List<Map<String, dynamic>> _conversations = [];
+  final ChatService _chatService = ChatService();
   String _searchQuery = '';
-
-  @override
-  void initState() {
-    super.initState();
-    _loadConversations();
-  }
-
-  Future<void> _loadConversations() async {
-    setState(() => _isLoading = true);
-    try {
-      // In a real implementation, we would query the chats collection
-      // For now, we'll use dummy data
-      await Future.delayed(const Duration(seconds: 1));
-      
-      setState(() {
-        _isLoading = false;
-        _conversations = List.generate(5, (index) => {
-          'id': 'chat_${index + 1}_${
-            widget.sellerId
-          }', // This would be the actual chatId
-          'buyerId': 'u1', // Hardcoded for demo
-          'buyerName': 'Buyer ${index + 1}',
-          'lastMessage': 'Interest in your product listing #${index + 1}',
-          'timestamp': DateTime.now().subtract(Duration(hours: index * 2)),
-          'unreadCount': index % 3,
-          'productId': 'product_${index + 1}',
-          'productTitle': 'Game Account ${index + 1}',
-        });
-      });
-    } catch (e) {
-      setState(() => _isLoading = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading conversations: $e')),
-        );
-      }
-    }
-  }
-
-  List<Map<String, dynamic>> get _filteredConversations {
-    if (_searchQuery.isEmpty) return _conversations;
-    return _conversations.where((conv) {
-      final buyerName = conv['buyerName'] as String;
-      final lastMessage = conv['lastMessage'] as String;
-      return buyerName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          lastMessage.toLowerCase().contains(_searchQuery.toLowerCase());
-    }).toList();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -100,42 +49,59 @@ class _SellerMessagesScreenState extends State<SellerMessagesScreen> {
           ),
         ),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppTheme.primaryColor))
-          : RefreshIndicator(
-              onRefresh: _loadConversations,
-              child: _filteredConversations.isEmpty
-                  ? _buildEmptyState()
-                  : ListView.builder(
-                      itemCount: _filteredConversations.length,
-                      itemBuilder: (context, index) {
-                        final conv = _filteredConversations[index];
-                        return ConversationTile(
-                          leadingText: conv['buyerName'] as String,
-                          subtitleText: conv['lastMessage'] as String,
-                          trailingText: DateFormat.jm().format(
-                            conv['timestamp'] as DateTime,
-                          ),
-                          unreadCount: conv['unreadCount'] as int,
-                          onTap: () {
-                            // Navigate to chat screen
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => ChatScreen.otherUser(
-                                  otherUser: conv['buyerName'] as String,
-                                ),
-                              ),
-                            );
-                          },
-                        );
-                      },
-                    ),
-            ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _loadConversations,
-        backgroundColor: AppTheme.primaryColor,
-        child: const Icon(Icons.refresh),
+      body: StreamBuilder<List<Map<String, dynamic>>>(
+        stream: _chatService.getChatsForUser(widget.sellerId),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator(color: AppTheme.primaryColor));
+          }
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          }
+          final chats = snapshot.data ?? [];
+          
+          if (chats.isEmpty) {
+            return _buildEmptyState();
+          }
+
+          // Filter by search query
+          final filteredChats = chats.where((chat) {
+            final buyerName = (chat['buyerName'] as String? ?? '').toLowerCase();
+            final lastMessage = (chat['lastMessage'] as String? ?? '').toLowerCase();
+            final productTitle = (chat['productTitle'] as String? ?? '').toLowerCase();
+            final query = _searchQuery.toLowerCase();
+            return buyerName.contains(query) || lastMessage.contains(query) || productTitle.contains(query);
+          }).toList();
+
+          if (filteredChats.isEmpty) {
+            return const Center(child: Text('No matching conversations found.'));
+          }
+
+          return ListView.builder(
+            itemCount: filteredChats.length,
+            itemBuilder: (context, index) {
+              final chat = filteredChats[index];
+              final buyerId = chat['buyerId'] ?? '';
+              final buyerName = chat['buyerName'] as String? ?? '';
+              final lastMsg = chat['lastMessage'] ?? 'No messages yet';
+              final productTitle = chat['productTitle'] ?? 'Product';
+              
+              DateTime updatedAt = DateTime.now();
+              if (chat['updatedAt'] is Timestamp) {
+                updatedAt = (chat['updatedAt'] as Timestamp).toDate();
+              }
+
+              return BuyerConversationTile(
+                chat: chat,
+                buyerId: buyerId,
+                buyerName: buyerName,
+                lastMsg: lastMsg,
+                productTitle: productTitle,
+                updatedAt: updatedAt,
+              );
+            },
+          );
+        },
       ),
     );
   }
@@ -161,33 +127,102 @@ class _SellerMessagesScreenState extends State<SellerMessagesScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Start chatting with buyers who are interested in your products',
+            'Conversations with interested buyers will appear here.',
             style: TextStyle(
               fontSize: 14,
               color: Colors.grey[500],
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 32),
-          ElevatedButton.icon(
-            onPressed: () {
-              // In a real app, this might navigate to a "buyers" screen
-              // For now, just show a message
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Buyer list would appear here in a full implementation'),
-                ),
-              );
-            },
-            icon: const Icon(Icons.person_add),
-            label: const Text('Find Buyers'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.primaryColor,
-              foregroundColor: Colors.white,
-            ),
-          ),
         ],
       ),
+    );
+  }
+}
+
+// Widget con đại diện cho mỗi Tile để cô lập Future và tránh vòng lặp rebuild vô hạn
+class BuyerConversationTile extends StatefulWidget {
+  final Map<String, dynamic> chat;
+  final String buyerId;
+  final String buyerName;
+  final String lastMsg;
+  final String productTitle;
+  final DateTime updatedAt;
+
+  const BuyerConversationTile({
+    super.key,
+    required this.chat,
+    required this.buyerId,
+    required this.buyerName,
+    required this.lastMsg,
+    required this.productTitle,
+    required this.updatedAt,
+  });
+
+  @override
+  State<BuyerConversationTile> createState() => _BuyerConversationTileState();
+}
+
+class _BuyerConversationTileState extends State<BuyerConversationTile> {
+  late Future<DocumentSnapshot> _fetchUserFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    // Khởi tạo Future đúng 1 lần duy nhất trong initState để tránh tạo Future liên tục khi build
+    _fetchUserFuture = FirebaseFirestore.instance.collection('users').doc(widget.buyerId).get();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Nếu buyerName đã hợp lệ và không trống, hiển thị trực tiếp
+    if (widget.buyerName.trim().isNotEmpty &&
+        widget.buyerName != 'Unknown Buyer' &&
+        widget.buyerName != 'No name set') {
+      return _buildTile(widget.buyerName);
+    }
+
+    // Nếu trống hoặc là tên mặc định, dùng FutureBuilder đã được gán Future cố định
+    return FutureBuilder<DocumentSnapshot>(
+      future: _fetchUserFuture,
+      builder: (context, snapshot) {
+        String displayName = widget.buyerName.isEmpty ? 'Buyer' : widget.buyerName;
+        if (snapshot.hasData && snapshot.data!.exists) {
+          final data = snapshot.data!.data() as Map<String, dynamic>?;
+          final name = data?['name'] as String?;
+          final email = data?['email'] as String?;
+          if (name != null && name.trim().isNotEmpty && name != 'No name set') {
+            displayName = name;
+          } else if (email != null && email.trim().isNotEmpty) {
+            displayName = email;
+          }
+        }
+        return _buildTile(displayName);
+      },
+    );
+  }
+
+  Widget _buildTile(String displayName) {
+    return ConversationTile(
+      leadingText: displayName,
+      subtitleText: '${widget.productTitle}: ${widget.lastMsg}',
+      trailingText: DateFormat.jm().format(widget.updatedAt),
+      unreadCount: 0,
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ChatScreen(
+              buyerId: widget.buyerId,
+              buyerName: displayName,
+              sellerId: widget.chat['sellerId'] ?? '',
+              sellerName: widget.chat['sellerName'] ?? 'Seller',
+              productId: widget.chat['productId'] ?? '',
+              productTitle: widget.productTitle,
+            ),
+          ),
+        );
+      },
     );
   }
 }

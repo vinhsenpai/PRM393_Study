@@ -18,8 +18,7 @@ import 'providers/auth_provider.dart';
 import 'screens/login_screen.dart';
 import 'navigation/buyer_navigation_shell.dart';
 import 'navigation/seller_navigation_shell.dart';
-import 'screens/admin_home_screen.dart';
-import 'screens/verify_email_screen.dart';
+import 'screens/admin_dashboard_screen.dart';
 import 'screens/email_verification_required_screen.dart';
 
 
@@ -45,20 +44,7 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  runApp(
-
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => AuthProvider()),
-        ChangeNotifierProvider(create: (_) => AccountProvider()),
-        ChangeNotifierProvider(
-          create: (context) => CartProvider()..loadCart(),
-        ),
-
-      ],
-      child: const GameAcctHubApp(),
-    ),
-  );
+  runApp(const GameAcctHubApp());
 }
 
 class GameAcctHubApp extends StatelessWidget {
@@ -66,8 +52,16 @@ class GameAcctHubApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'GameAcctHub',
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => AccountProvider()),
+        ChangeNotifierProvider(
+          create: (context) => CartProvider()..loadCart(),
+        ),
+      ],
+      child: MaterialApp(
+        title: 'GameAcctHub',
       theme: AppTheme.lightTheme,
       debugShowCheckedModeBanner: false,
       home: Consumer<AuthProvider>(
@@ -103,7 +97,7 @@ class GameAcctHubApp extends StatelessWidget {
   if (snapshot.data == true) {
   switch (auth.currentUser?.role) {
     case UserRole.admin:
-      return const AdminHomeScreen();
+      return const AdminDashboardScreen();
 
     case UserRole.seller:
       return const SellerNavigationShell();
@@ -120,6 +114,6 @@ class GameAcctHubApp extends StatelessWidget {
           );
         },
       ),
-    );
+    ),);
   }
 }

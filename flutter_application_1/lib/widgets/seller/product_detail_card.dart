@@ -6,9 +6,9 @@ class ProductDetailCard extends StatelessWidget {
   final OrderItem product;
 
   const ProductDetailCard({
-    Key? key,
+    super.key,
     required this.product,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

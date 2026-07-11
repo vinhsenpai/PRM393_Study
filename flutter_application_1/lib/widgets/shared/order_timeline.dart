@@ -6,9 +6,9 @@ class OrderTimeline extends StatelessWidget {
   final String status;
 
   const OrderTimeline({
-    Key? key,
+    super.key,
     required this.status,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

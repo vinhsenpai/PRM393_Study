@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../models/product.dart';
 import '../providers/auth_provider.dart';
@@ -8,7 +9,6 @@ import '../screens/chat_screen.dart';
 import '../widgets/marketplace/marketplace_image_carousel.dart';
 import '../widgets/marketplace/marketplace_widgets.dart';
 import '../widgets/marketplace/sticky_product_action_bar.dart';
-import '../theme/app_theme.dart';
 
 class ProductDetailScreenRedesigned extends StatelessWidget {
   final Product product;
@@ -111,24 +111,58 @@ class ProductDetailScreenRedesigned extends StatelessWidget {
             right: 0,
             bottom: 0,
             child: StickyProductActionBar(
-              onContact: () {
+              onContact: () async {
                 if (buyerId.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Please login to contact the seller.')),
                   );
                   return;
                 }
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => ChatScreen(
-                      buyerId: buyerId,
-                      sellerId: sellerId,
-                      productId: product.id,
-                      productTitle: product.title,
-                    ),
-                  ),
+                
+                // Show loading indicator
+                showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (context) => const Center(child: CircularProgressIndicator()),
                 );
+
+                String sellerName = 'Seller';
+                try {
+                  final sellerDoc = await FirebaseFirestore.instance.collection('users').doc(sellerId).get();
+                  if (sellerDoc.exists) {
+                    final name = sellerDoc.data()?['name'] as String?;
+                    final email = sellerDoc.data()?['email'] as String?;
+                    if (name != null && name.trim().isNotEmpty && name != 'No name set') {
+                      sellerName = name;
+                    } else if (email != null && email.trim().isNotEmpty) {
+                      sellerName = email;
+                    }
+                  }
+                } catch (e) {
+                  // Ignored
+                }
+
+                if (context.mounted) {
+                  Navigator.pop(context); // Dismiss loading dialog
+
+                  final rawName = auth.currentUser?.name ?? '';
+                  final email = auth.currentUser?.email ?? 'Buyer';
+                  final buyerName = (rawName.trim().isNotEmpty && rawName != 'No name set') ? rawName : email;
+                  
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ChatScreen(
+                        buyerId: buyerId,
+                        buyerName: buyerName,
+                        sellerId: sellerId,
+                        sellerName: sellerName,
+                        productId: product.id,
+                        productTitle: product.title,
+                      ),
+                    ),
+                  );
+                }
               },
               onBuyNow: () async {
                 // Checkout logic is intentionally not implemented.

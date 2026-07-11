@@ -10,7 +10,7 @@ import '../widgets/seller/product_detail_card.dart';
 class SellerOrderDetailScreen extends StatefulWidget {
   final String orderId;
 
-  const SellerOrderDetailScreen({Key? key, required this.orderId}) : super(key: key);
+  const SellerOrderDetailScreen({super.key, required this.orderId});
 
   @override
   State<SellerOrderDetailScreen> createState() => _SellerOrderDetailScreenState();
@@ -135,7 +135,7 @@ class _SellerOrderDetailScreenState extends State<SellerOrderDetailScreen> {
                 _buildDetailRow('Created Date',
                     '${order.createdAt.toDate().day} ${_getMonthName(order.createdAt.toDate().month)} ${order.createdAt.toDate().year}'),
                 _buildDetailRow('Updated Date',
-                    '${order.updatedAt?.toDate().day ?? order.createdAt.toDate().day} ${_getMonthName(order.updatedAt?.toDate().month ?? order.createdAt.toDate().month)} ${order.updatedAt?.toDate().year ?? order.createdAt.toDate().year}'),
+                    '${order.updatedAt.toDate().day ?? order.createdAt.toDate().day} ${_getMonthName(order.updatedAt.toDate().month ?? order.createdAt.toDate().month)} ${order.updatedAt.toDate().year ?? order.createdAt.toDate().year}'),
               ],
             ),
           ),

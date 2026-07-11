@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../providers/account_provider.dart';
-import '../models/account.dart';
 import 'chat_screen.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
@@ -51,7 +50,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
         onPressed: () {
           Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatScreen(
             buyerId: 'admin', 
+            buyerName: 'System Admin',
             sellerId: 'support', 
+            sellerName: 'Support Team',
             productId: 'support_product',
             productTitle: 'Support Chat'
           )));

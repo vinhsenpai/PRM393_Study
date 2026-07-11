@@ -85,8 +85,16 @@ class AuthService {
 
   /// Logout from Firebase and Google.
   Future<void> logout() async {
-    await _auth.signOut();
-    await _googleSignIn.signOut();
+    try {
+      await _auth.signOut();
+    } catch (e) {
+      // Ignored
+    }
+    try {
+      await _googleSignIn.signOut();
+    } catch (e) {
+      // Ignored / Google Sign-In might not be initialized on Edge/Web
+    }
   }
 
     /// Creates/updates Firestore user document at users/{uid}.
@@ -103,10 +111,13 @@ class AuthService {
   /// - If provider field doesn't exist: set to 'google' for existing users
   /// - If emailVerified field doesn't exist: set to true for existing users
   Future<void> createOrUpdateUserInFirestore(
-      UserCredential userCredential) async {
+      UserCredential userCredential, {
+      String? displayName,
+      String? role,
+  }) async {
     final User? user = userCredential.user;
     if (user == null) {
-      throw StateError('FirebaseAuth user is null after Google login.');
+      throw StateError('FirebaseAuth user is null after login.');
     }
 
     final String uid = user.uid;
@@ -116,58 +127,46 @@ class AuthService {
     final DocumentSnapshot<Map<String, dynamic>> existingSnap =
         await userRef.get();
 
-    final String name = user.displayName ?? '';
+    final String name = displayName ?? user.displayName ?? '';
     final String email = user.email ?? '';
     final String photoUrl = user.photoURL ?? '';
-
-    final Timestamp now = Timestamp.now();
 
     final bool exists = existingSnap.exists;
     final Map<String, dynamic>? existingData = existingSnap.data();
 
-
-    // Default role
-    String role = 'buyer';
-
+    // Default role logic: preserve if exists, else use passed role or default to 'buyer'
+    String finalRole = 'buyer';
     if (exists) {
       final roleObj = existingData?['role'];
       if (roleObj is String && (roleObj == 'buyer' || roleObj == 'seller' || roleObj == 'admin')) {
-        role = roleObj;
+        finalRole = roleObj;
       }
+    } else {
+      finalRole = role ?? 'buyer';
     }
 
-    // Provider/emailVerified defaults (will be overridden by backward-compat rules for existing docs)
-    // - New email/password signups: provider=email, emailVerified=false
-    // - New Google signins: provider=google, emailVerified=true
-    // NOTE: For legacy accounts, we preserve existing provider/emailVerified if present.
-    final bool isEmailCredential = userCredential.credential is EmailAuthCredential;
-    String finalProvider = isEmailCredential ? 'email' : 'google';
-    bool finalEmailVerified = isEmailCredential ? false : true;
+    // Provider detection using providerData or credential type
+    String finalProvider = 'google';
+    if (user.providerData.any((info) => info.providerId == 'password') ||
+        userCredential.credential is EmailAuthCredential) {
+      finalProvider = 'email';
+    }
 
+    bool finalEmailVerified = user.emailVerified;
 
     if (exists) {
-      // Preserve existing role if valid
-      final roleObj = existingData?['role'];
-      if (roleObj is String && (roleObj == 'buyer' || roleObj == 'seller' || roleObj == 'admin')) {
-        role = roleObj;
-      }
-
       // Handle provider field for backward compatibility
       final providerObj = existingData?['provider'];
       if (providerObj is String) {
         finalProvider = providerObj;
-      } else {
-        // If provider doesn't exist, assume Google for existing users
-        finalProvider = 'google';
       }
 
       // Handle emailVerified field for backward compatibility
       final emailVerifiedObj = existingData?['emailVerified'];
       if (emailVerifiedObj is bool) {
-        finalEmailVerified = emailVerifiedObj;
-      } else {
-        // If emailVerified doesn't exist, assume true for existing users (Google users)
-        finalEmailVerified = true;
+        // If emailVerified exists in DB, we can let user.emailVerified take precedence if it's true,
+        // or keep the existing verified state if it was already verified.
+        finalEmailVerified = user.emailVerified || emailVerifiedObj;
       }
     }
 
@@ -179,7 +178,7 @@ class AuthService {
       'name': name,
       'email': email,
       'photoUrl': photoUrl,
-      'role': role,
+      'role': finalRole,
       'provider': finalProvider,
       'emailVerified': finalEmailVerified,
       'createdAt': createdAtValue,

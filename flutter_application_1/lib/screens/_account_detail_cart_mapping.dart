@@ -14,6 +14,8 @@ Product mapGameAccountToProduct(GameAccount acc) {
     stockStatus: acc.status == AccountStatus.available
         ? ProductStatus.available
         : ProductStatus.reserved,
+    accountName: '',
+    password: '',
     createdAt: DateTime.now(),
     updatedAt: DateTime.now(),
   );

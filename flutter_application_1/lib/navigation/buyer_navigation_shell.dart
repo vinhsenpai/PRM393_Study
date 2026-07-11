@@ -24,7 +24,7 @@ class _BuyerNavigationShellState extends State<BuyerNavigationShell> {
     final auth = context.read<AuthProvider>();
     final userId = auth.currentUser?.id ?? '';
 
-    final List<Widget> _pages = [
+    final List<Widget> pages = [
       const BuyerHomeScreen(),
       const CartScreen(),
       const OrderHistoryScreen(),
@@ -32,7 +32,7 @@ class _BuyerNavigationShellState extends State<BuyerNavigationShell> {
       ProfileScreen(userId: userId),
     ];
 
-    void _onItemTapped(int index) {
+    void onItemTapped(int index) {
       setState(() {
         _currentIndex = index;
       });
@@ -41,11 +41,11 @@ class _BuyerNavigationShellState extends State<BuyerNavigationShell> {
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
-        children: _pages,
+        children: pages,
       ),
       bottomNavigationBar: BuyerBottomNav(
         currentIndex: _currentIndex,
-        onTap: _onItemTapped,
+        onTap: onItemTapped,
       ),
     );
   }

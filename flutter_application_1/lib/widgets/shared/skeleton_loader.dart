@@ -6,9 +6,9 @@ class SkeletonLoader extends StatelessWidget {
   final SkeletonLoaderType type;
 
   const SkeletonLoader({
-    Key? key,
+    super.key,
     required this.type,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +26,7 @@ class SkeletonLoader extends StatelessWidget {
     return ListView.separated(
       padding: const EdgeInsets.all(16),
       itemCount: 6, // Show 6 skeleton cards
-      separatorBuilder: (_, __) => const SizedBox(height: 16),
+      separatorBuilder: (_, _) => const SizedBox(height: 16),
       itemBuilder: (context, index) => _buildOrderCardSkeleton(),
     );
   }
