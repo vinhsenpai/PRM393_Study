@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/auth_provider.dart';
+import '../screens/edit_profile_screen.dart';
 import '../models/user.dart';
+
 
 class ProfileScreen extends StatelessWidget {
   final String userId;
@@ -76,7 +78,11 @@ class ProfileScreen extends StatelessWidget {
             leading: const Icon(Icons.edit),
             title: const Text('Edit Profile'),
             onTap: () {
-              // TODO: Navigate to edit profile screen
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => EditProfileScreen(userId: user.id),
+                ),
+              );
             },
           ),
           ListTile(

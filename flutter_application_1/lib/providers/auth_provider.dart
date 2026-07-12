@@ -13,6 +13,12 @@ class AuthProvider with ChangeNotifier {
 
   FirebaseFirestore get firestore => _authService.firestore;
 
+  void refreshCurrentUser(User user) {
+    _currentUser = user;
+    notifyListeners();
+  }
+
+
 
 
   User? _currentUser;
