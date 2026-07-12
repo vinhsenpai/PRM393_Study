@@ -13,13 +13,23 @@ import 'product_detail_screen_redesigned.dart' as detail;
 
 class ProductCatalogScreen extends StatelessWidget {
   final bool hideAppBar;
+  final String searchQuery;
+  final String? category;
 
-  const ProductCatalogScreen({super.key, this.hideAppBar = false});
+  const ProductCatalogScreen({
+    super.key,
+    this.hideAppBar = false,
+    this.searchQuery = '',
+    this.category,
+  });
 
   @override
   Widget build(BuildContext context) {
     if (hideAppBar) {
-      return const _ProductCatalogBody();
+      return _ProductCatalogBody(
+        searchQuery: searchQuery,
+        category: category,
+      );
     }
 
     return Scaffold(
@@ -37,13 +47,22 @@ class ProductCatalogScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: const _ProductCatalogBody(),
+      body: _ProductCatalogBody(
+        searchQuery: searchQuery,
+        category: category,
+      ),
     );
   }
 }
 
 class _ProductCatalogBody extends StatefulWidget {
-  const _ProductCatalogBody();
+  final String searchQuery;
+  final String? category;
+
+  const _ProductCatalogBody({
+    required this.searchQuery,
+    this.category,
+  });
 
   @override
   State<_ProductCatalogBody> createState() => _ProductCatalogBodyState();
@@ -53,9 +72,29 @@ class _ProductCatalogBodyState extends State<_ProductCatalogBody> {
   final ProductService _productService = ProductService();
   int _refreshToken = 0;
 
+  bool _matchesFilters(Product p) {
+    final q = widget.searchQuery.trim().toLowerCase();
+    final cat = widget.category?.trim().toLowerCase();
+
+    final matchesQuery = q.isEmpty ||
+        p.title.toLowerCase().contains(q) ||
+        p.game.toLowerCase().contains(q) ||
+        p.accountName.toLowerCase().contains(q) ||
+        p.description.toLowerCase().contains(q);
+
+    final matchesCategory =
+        cat == null ||
+        cat.isEmpty ||
+        cat == 'all' ||
+        p.game.toLowerCase() == cat ||
+        p.tags.map((t) => t.toLowerCase()).contains(cat);
+
+    return matchesQuery && matchesCategory;
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Keeps existing behavior (even if not used directly, it might trigger rebuilds)
+    // Keep existing behavior (may trigger rebuilds based on auth changes)
     context.watch<AuthProvider>();
 
     return RefreshIndicator(
@@ -81,12 +120,13 @@ class _ProductCatalogBodyState extends State<_ProductCatalogBody> {
                 );
               }
 
-              final products = snapshot.data ?? [];
+              final products =
+                  (snapshot.data ?? []).where(_matchesFilters).toList();
 
               if (products.isEmpty) {
                 return MarketplaceEmptyState(
                   title: 'No products available',
-                  subtitle: 'Try pulling to refresh or come back later.',
+                  subtitle: 'Try pulling to refresh or change your filters.',
                   onRefresh: () => setState(() => _refreshToken++),
                 );
               }
@@ -96,7 +136,8 @@ class _ProductCatalogBodyState extends State<_ProductCatalogBody> {
                   SliverPadding(
                     padding: const EdgeInsets.fromLTRB(14, 12, 14, 18),
                     sliver: SliverGrid(
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
                         childAspectRatio: 0.66,
                         crossAxisSpacing: 14,
@@ -122,8 +163,7 @@ class _ProductCatalogBodyState extends State<_ProductCatalogBody> {
                             onFavorite: () {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
-                                  content:
-                                      Text('Favorites coming soon'),
+                                  content: Text('Favorites coming soon'),
                                 ),
                               );
                             },
@@ -172,7 +212,8 @@ class _ProductCatalogBodyState extends State<_ProductCatalogBody> {
               AspectRatio(
                 aspectRatio: 1 / 1,
                 child: ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(16)),
                   child: MarketplaceShimmerSkeleton(
                     height: double.infinity,
                     width: double.infinity,
@@ -187,13 +228,15 @@ class _ProductCatalogBodyState extends State<_ProductCatalogBody> {
                     MarketplaceShimmerSkeleton(
                       height: 16,
                       width: double.infinity,
-                      borderRadius: const BorderRadius.all(Radius.circular(8)),
+                      borderRadius:
+                          const BorderRadius.all(Radius.circular(8)),
                     ),
                     const SizedBox(height: 6),
                     MarketplaceShimmerSkeleton(
                       height: 12,
                       width: 80,
-                      borderRadius: const BorderRadius.all(Radius.circular(8)),
+                      borderRadius:
+                          const BorderRadius.all(Radius.circular(8)),
                     ),
                     const SizedBox(height: 12),
                     Row(
@@ -202,12 +245,14 @@ class _ProductCatalogBodyState extends State<_ProductCatalogBody> {
                         MarketplaceShimmerSkeleton(
                           height: 20,
                           width: 60,
-                          borderRadius: const BorderRadius.all(Radius.circular(8)),
+                          borderRadius:
+                              const BorderRadius.all(Radius.circular(8)),
                         ),
                         MarketplaceShimmerSkeleton(
                           height: 20,
                           width: 40,
-                          borderRadius: const BorderRadius.all(Radius.circular(999)),
+                          borderRadius:
+                              const BorderRadius.all(Radius.circular(999)),
                         ),
                       ],
                     ),

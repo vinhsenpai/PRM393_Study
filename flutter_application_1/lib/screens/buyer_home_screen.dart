@@ -7,8 +7,16 @@ import '../screens/order_history_screen.dart';
 import '../screens/buyer_messages_screen.dart';
 import 'cart_screen.dart';
 
-class BuyerHomeScreen extends StatelessWidget {
+class BuyerHomeScreen extends StatefulWidget {
   const BuyerHomeScreen({super.key});
+
+  @override
+  State<BuyerHomeScreen> createState() => _BuyerHomeScreenState();
+}
+
+class _BuyerHomeScreenState extends State<BuyerHomeScreen> {
+  String _searchQuery = '';
+  String _selectedCategory = 'all';
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +40,10 @@ class BuyerHomeScreen extends StatelessWidget {
           _buildSearchBar(),
           _buildCategoryChips(),
           Expanded(
-            child: ProductCatalogScreen(hideAppBar: true),
+child: ProductCatalogScreen(
+              hideAppBar: true,
+              searchQuery: _searchQuery,
+            ),
           ),
         ],
       ),
@@ -77,7 +88,8 @@ class BuyerHomeScreen extends StatelessWidget {
   Widget _buildSearchBar() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
-      child: TextField(
+child: TextField(
+        onChanged: (v) => setState(() => _searchQuery = v),
         decoration: InputDecoration(
           hintText: 'Search game accounts...',
           prefixIcon: const Icon(Icons.search),
