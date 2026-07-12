@@ -1,6 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart' hide Order;
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/order.dart';
+import '../models/notification_item.dart';
+import 'notification_service.dart';
+
 
 class OrderService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -171,9 +174,31 @@ class OrderService {
     // Ensure the order belongs to the current user as seller (security)
     if (data['sellerId'] != _userId) return;
 
+    final buyerId = data['buyerId']?.toString() ?? '';
+
     await docRef.update({
       'status': status,
       'updatedAt': Timestamp.now(),
     });
+
+    // Create notification for buyer
+    try {
+      if (buyerId.isNotEmpty) {
+        final notificationService =
+            NotificationService();
+        await notificationService.createNotification(
+          receiverId: buyerId,
+          type: NotificationType.order,
+          title: 'Order status updated',
+          body: 'Your order has changed to "$status".',
+          payload: {
+            'orderId': orderId,
+          },
+        );
+      }
+    } catch (_) {
+      // ignore notification failures so order update remains reliable
+    }
   }
 }
+

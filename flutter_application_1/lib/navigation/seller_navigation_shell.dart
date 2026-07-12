@@ -8,6 +8,7 @@ import '../screens/seller_products_screen.dart';
 import '../screens/seller_orders_screen.dart';
 import '../screens/seller_analytics_screen.dart';
 import '../screens/seller_profile_screen.dart';
+import '../screens/notifications_screen.dart';
 
 class SellerNavigationShell extends StatefulWidget {
   const SellerNavigationShell({super.key});
@@ -28,9 +29,11 @@ class _SellerNavigationShellState extends State<SellerNavigationShell> {
       SellerDashboardScreen(sellerId: sellerId),
       SellerProductsScreen(sellerId: sellerId),
       SellerOrdersScreen(sellerId: sellerId),
+      const NotificationsScreen(),
       SellerAnalyticsScreen(),
       SellerProfileScreen(),
     ];
+
 
     void onItemTapped(int index) {
       setState(() {

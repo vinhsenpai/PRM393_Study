@@ -36,6 +36,12 @@ class SellerBottomNav extends StatelessWidget {
           selectedIcon: const Icon(Icons.shopping_bag),
           label: 'Orders',
         ),
+        // Notifications
+        NavigationDestination(
+          icon: const Icon(Icons.notifications_none_outlined),
+          selectedIcon: const Icon(Icons.notifications_active),
+          label: 'Notifications',
+        ),
         // Analytics
         NavigationDestination(
           icon: const Icon(Icons.analytics_outlined),

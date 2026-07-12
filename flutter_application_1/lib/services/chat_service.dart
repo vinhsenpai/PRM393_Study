@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/message.dart';
+import '../models/notification_item.dart';
+import 'notification_service.dart';
 
 class ChatService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -20,7 +22,6 @@ class ChatService {
     
     // Check if chat already exists
     final chatDoc = await _firestore.collection('chats').doc(chatId).get();
-    
     if (!chatDoc.exists) {
       // Create new chat
       await _firestore.collection('chats').doc(chatId).set({
@@ -40,7 +41,12 @@ class ChatService {
   }
 
   // Send a message in a chat
-  Future<void> sendMessage(String chatId, String senderId, String senderRole, String text) async {
+  Future<void> sendMessage(
+    String chatId,
+    String senderId,
+    String senderRole,
+    String text,
+  ) async {
     if (text.trim().isEmpty) return;
 
     // Add message to messages subcollection
@@ -60,6 +66,42 @@ class ChatService {
       'lastMessage': text.trim(),
       'updatedAt': FieldValue.serverTimestamp(),
     });
+
+    // Create notification for the other participant
+    try {
+      final chatSnapshot = await chatDoc.get();
+      if (!chatSnapshot.exists) return;
+      final data = chatSnapshot.data() as Map<String, dynamic>;
+
+      final buyerId = data['buyerId']?.toString() ?? '';
+      final buyerName = data['buyerName']?.toString() ?? '';
+      final sellerId = data['sellerId']?.toString() ?? '';
+      final sellerName = data['sellerName']?.toString() ?? '';
+      final productId = data['productId']?.toString() ?? '';
+      final productTitle = data['productTitle']?.toString() ?? '';
+
+      final receiverId = senderRole == 'buyer' ? sellerId : buyerId;
+      if (receiverId.isEmpty) return;
+
+      final notificationService = NotificationService();
+      await notificationService.createNotification(
+        receiverId: receiverId,
+        type: NotificationType.message,
+        title: 'New message',
+        body: text.trim(),
+        payload: {
+          'buyerId': buyerId,
+          'buyerName': buyerName,
+          'sellerId': sellerId,
+          'sellerName': sellerName,
+          'productId': productId,
+          'productTitle': productTitle,
+          'chatId': chatId,
+        },
+      );
+    } catch (_) {
+      // ignore notification failures
+    }
   }
 
   // Get messages stream for a chat
@@ -124,3 +166,4 @@ class ChatService {
     });
   }
 }
+

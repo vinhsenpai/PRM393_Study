@@ -1,64 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:provider/provider.dart';
 
-enum NotificationType { order, system, support, verification }
+import '../models/notification_item.dart';
+import '../providers/auth_provider.dart';
+import '../services/notification_service.dart';
+import 'order_detail_screen.dart';
+import 'chat_screen.dart';
 
-class NotificationItem {
-  final String id;
-  final String title;
-  final String body;
-  final DateTime timestamp;
-  final NotificationType type;
-  final bool isRead;
-
-  NotificationItem({
-    required this.id,
-    required this.title,
-    required this.body,
-    required this.timestamp,
-    required this.type,
-    this.isRead = false,
-  });
-}
-
-class NotificationsScreen extends StatelessWidget {
+class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
 
   @override
+  State<NotificationsScreen> createState() => _NotificationsScreenState();
+}
+
+class _NotificationsScreenState extends State<NotificationsScreen> {
+  final NotificationService _notificationService = NotificationService();
+
+  @override
   Widget build(BuildContext context) {
-    // Mock notifications for demonstration
-    final List<NotificationItem> notifications = [
-      NotificationItem(
-        id: '1',
-        title: 'Order Successful',
-        body: 'Your purchase of PUBG Mobile Account has been confirmed.',
-        timestamp: DateTime.now().subtract(const Duration(minutes: 15)),
-        type: NotificationType.order,
-      ),
-      NotificationItem(
-        id: '2',
-        title: 'New Support Message',
-        body: 'Admin has replied to your inquiry about payment.',
-        timestamp: DateTime.now().subtract(const Duration(hours: 2)),
-        type: NotificationType.support,
-        isRead: true,
-      ),
-      NotificationItem(
-        id: '3',
-        title: 'Account Verified',
-        body: 'Congratulations! Your listing "Genshin Impact AR 55" is now live.',
-        timestamp: DateTime.now().subtract(const Duration(days: 1)),
-        type: NotificationType.verification,
-      ),
-      NotificationItem(
-        id: '4',
-        title: 'System Update',
-        body: 'We have updated our terms of service. Please review them.',
-        timestamp: DateTime.now().subtract(const Duration(days: 2)),
-        type: NotificationType.system,
-        isRead: true,
-      ),
-    ];
+    final auth = context.watch<AuthProvider>();
+    final userId = auth.currentUser?.id ?? '';
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
@@ -67,45 +30,59 @@ class NotificationsScreen extends StatelessWidget {
         centerTitle: true,
         actions: [
           TextButton(
-            onPressed: () {},
-            child: const Text('Mark all as read', style: TextStyle(color: Colors.white)),
+            onPressed: userId.isEmpty
+                ? null
+                : () async {
+                    await _notificationService.markAllAsRead(userId);
+                  },
+            child: const Text(
+              'Mark all as read',
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
-      body: notifications.isEmpty
+      body: userId.isEmpty
           ? _buildEmptyState()
-          : ListView.builder(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              itemCount: notifications.length,
-              itemBuilder: (context, index) {
-                return _buildNotificationTile(context, notifications[index], index);
+          : StreamBuilder<List<AppNotificationItem>>(
+              stream: _notificationService.getNotificationsStream(userId),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return Center(
+                    child: Text('Error: ${snapshot.error}'),
+                  );
+                }
+
+                final notifications = snapshot.data ?? [];
+                if (notifications.isEmpty) {
+                  return _buildEmptyState();
+                }
+
+                return ListView.builder(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  itemCount: notifications.length,
+                  itemBuilder: (context, index) {
+                    return _buildNotificationTile(
+                      context,
+                      notifications[index],
+                      index,
+                    );
+                  },
+                );
               },
             ),
     );
   }
 
-  Widget _buildNotificationTile(BuildContext context, NotificationItem item, int index) {
-    IconData iconData;
-    Color iconColor;
-
-    switch (item.type) {
-      case NotificationType.order:
-        iconData = Icons.shopping_bag_rounded;
-        iconColor = Colors.green;
-        break;
-      case NotificationType.system:
-        iconData = Icons.info_rounded;
-        iconColor = Colors.blue;
-        break;
-      case NotificationType.support:
-        iconData = Icons.support_agent_rounded;
-        iconColor = Colors.orange;
-        break;
-      case NotificationType.verification:
-        iconData = Icons.verified_user_rounded;
-        iconColor = Colors.purple;
-        break;
-    }
+  Widget _buildNotificationTile(
+    BuildContext context,
+    AppNotificationItem item,
+    int index,
+  ) {
+    final icon = _getIconForType(item.type);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -113,18 +90,20 @@ class NotificationsScreen extends StatelessWidget {
         color: item.isRead ? Colors.white : Colors.blue.withOpacity(0.03),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: item.isRead ? Colors.grey[200]! : Colors.blue.withOpacity(0.1),
+          color:
+              item.isRead ? Colors.grey[200]! : Colors.blue.withOpacity(0.1),
         ),
       ),
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: iconColor.withOpacity(0.1),
+            color: icon.color.withOpacity(0.1),
             shape: BoxShape.circle,
           ),
-          child: Icon(iconData, color: iconColor, size: 24),
+          child: Icon(icon.data, color: icon.color, size: 24),
         ),
         title: Text(
           item.title,
@@ -148,11 +127,78 @@ class NotificationsScreen extends StatelessWidget {
             ),
           ],
         ),
-        onTap: () {
-          // Navigate to related screen based on type
+        onTap: () async {
+          final auth = context.read<AuthProvider>();
+          final userId = auth.currentUser?.id ?? '';
+
+          await _notificationService.markAsRead(
+            notificationId: item.id,
+            userId: userId,
+          );
+
+          if (!mounted) return;
+          await _navigateFromNotification(context, item);
         },
       ),
     ).animate().fadeIn(delay: (index * 100).ms).slideX(begin: 0.1);
+  }
+
+  Future<void> _navigateFromNotification(
+    BuildContext context,
+    AppNotificationItem item,
+  ) async {
+    if (item.type == NotificationType.order) {
+      final orderId = item.payload['orderId']?.toString();
+      if (orderId == null || orderId.isEmpty) return;
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => OrderDetailScreen(orderId: orderId),
+        ),
+      );
+      return;
+    }
+
+    if (item.type == NotificationType.message) {
+      // payload expected: buyerId,buyerName,sellerId,sellerName,productId,productTitle
+      final buyerId = item.payload['buyerId']?.toString();
+      final buyerName = item.payload['buyerName']?.toString() ?? '';
+      final sellerId = item.payload['sellerId']?.toString();
+      final sellerName = item.payload['sellerName']?.toString() ?? '';
+      final productId = item.payload['productId']?.toString();
+      final productTitle = item.payload['productTitle']?.toString() ?? '';
+
+      if ([buyerId, sellerId, productId].any((e) => e == null || e!.isEmpty)) {
+        return;
+      }
+
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => ChatScreen(
+            buyerId: buyerId!,
+            buyerName: buyerName,
+            sellerId: sellerId!,
+            sellerName: sellerName,
+            productId: productId!,
+            productTitle: productTitle,
+          ),
+        ),
+      );
+      return;
+    }
+
+    // system: do nothing for now
+  }
+
+  ({IconData data, Color color}) _getIconForType(NotificationType type) {
+    switch (type) {
+      case NotificationType.order:
+        return (data: Icons.shopping_bag_rounded, color: Colors.green);
+      case NotificationType.message:
+        return (data: Icons.chat_bubble_outline_rounded, color: Colors.blue);
+      case NotificationType.system:
+      default:
+        return (data: Icons.info_rounded, color: Colors.orange);
+    }
   }
 
   Widget _buildEmptyState() {
@@ -160,11 +206,12 @@ class NotificationsScreen extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.notifications_off_outlined, size: 80, color: Colors.grey[300]),
+          Icon(Icons.notifications_off_outlined,
+              size: 80, color: Colors.grey[300]),
           const SizedBox(height: 16),
-          Text(
+          const Text(
             'No notifications yet',
-            style: TextStyle(color: Colors.grey[600], fontSize: 18),
+            style: TextStyle(color: Colors.grey, fontSize: 18),
           ),
         ],
       ),
@@ -184,3 +231,4 @@ class NotificationsScreen extends StatelessWidget {
     }
   }
 }
+

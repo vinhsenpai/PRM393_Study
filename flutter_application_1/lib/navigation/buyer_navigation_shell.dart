@@ -8,9 +8,11 @@ import '../screens/cart_screen.dart';
 import '../screens/order_history_screen.dart';
 import '../screens/favorites_screen.dart';
 import '../screens/profile_screen.dart';
+import '../screens/notifications_screen.dart';
 
 class BuyerNavigationShell extends StatefulWidget {
   const BuyerNavigationShell({super.key});
+
 
   @override
   State<BuyerNavigationShell> createState() => _BuyerNavigationShellState();
@@ -28,9 +30,11 @@ class _BuyerNavigationShellState extends State<BuyerNavigationShell> {
       const BuyerHomeScreen(),
       const CartScreen(),
       const OrderHistoryScreen(),
+      const NotificationsScreen(),
       FavoritesScreen(userId: userId),
       ProfileScreen(userId: userId),
     ];
+
 
     void onItemTapped(int index) {
       setState(() {
