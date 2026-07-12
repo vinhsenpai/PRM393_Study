@@ -84,7 +84,7 @@ crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Image section with reduced height (1:1 aspect ratio)
             AspectRatio(
-              aspectRatio: 1 / 1,
+              aspectRatio: 1.35 / 1,
               child: ClipRRect(
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
                 child: Stack(
@@ -168,7 +168,7 @@ crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
                     product.title,
-                    maxLines: 2,
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontWeight: FontWeight.w900,
@@ -193,7 +193,7 @@ crossAxisAlignment: CrossAxisAlignment.stretch,
                       Text(
                         '${product.price.toStringAsFixed(0)} đ',
                         style: TextStyle(
-                          fontSize: 18,
+                          fontSize: 16,
                           fontWeight: FontWeight.w900,
                           color: AppTheme.primaryColor,
                         ),
