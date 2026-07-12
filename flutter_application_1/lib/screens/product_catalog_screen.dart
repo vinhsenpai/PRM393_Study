@@ -163,28 +163,45 @@ class _ProductCatalogBodyState extends State<_ProductCatalogBody> {
                                 ),
                               );
                             },
-                            onFavorite: () {
-                              final userId = context.read<AuthProvider>().currentUser?.id ?? '';
+                            onFavorite: () async {
+                              final auth = context.read<AuthProvider>();
+                              final userId = auth.currentUser?.id ?? '';
                               if (userId.isEmpty) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Please login to use favorites.')),
+                                  const SnackBar(
+                                    content: Text('Please login to use favorites.'),
+                                  ),
                                 );
                                 return;
                               }
 
-                              FirebaseFirestore.instance
+                              final favoriteDoc = FirebaseFirestore.instance
                                   .collection('favorites')
                                   .doc(userId)
                                   .collection('items')
-                                  .doc(product.id)
-                                  .get()
-                                  .then((doc) async {
-                                if (doc.exists) {
-                                  await doc.reference.delete();
-                                } else {
-                                  await doc.reference.set({});
-                                }
-                              });
+                                  .doc(product.id);
+
+                              final doc = await favoriteDoc.get();
+                              final isNowFavorite = !doc.exists;
+
+                              if (isNowFavorite) {
+                                await favoriteDoc.set({});
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Đã thêm vào danh sách Favorites'),
+                                  ),
+                                );
+                              } else {
+                                await favoriteDoc.delete();
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Đã gỡ khỏi danh sách Favorites'),
+                                  ),
+                                );
+                              }
+
+                              // Refresh to update heart state
+                              setState(() => _refreshToken++);
                             },
                             isFavorite: false,
                           );
