@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import '../models/product.dart';
 import '../providers/auth_provider.dart';
 import '../services/product_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 import '../widgets/marketplace/marketplace_product_card.dart';
 import '../widgets/marketplace/marketplace_widgets.dart';
 
@@ -30,6 +32,7 @@ class ProductCatalogScreen extends StatelessWidget {
         searchQuery: searchQuery,
         category: category,
       );
+
     }
 
     return Scaffold(
@@ -161,11 +164,27 @@ class _ProductCatalogBodyState extends State<_ProductCatalogBody> {
                               );
                             },
                             onFavorite: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Favorites coming soon'),
-                                ),
-                              );
+                              final userId = context.read<AuthProvider>().currentUser?.id ?? '';
+                              if (userId.isEmpty) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Please login to use favorites.')),
+                                );
+                                return;
+                              }
+
+                              FirebaseFirestore.instance
+                                  .collection('favorites')
+                                  .doc(userId)
+                                  .collection('items')
+                                  .doc(product.id)
+                                  .get()
+                                  .then((doc) async {
+                                if (doc.exists) {
+                                  await doc.reference.delete();
+                                } else {
+                                  await doc.reference.set({});
+                                }
+                              });
                             },
                             isFavorite: false,
                           );

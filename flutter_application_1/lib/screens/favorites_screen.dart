@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../models/product.dart';
 import '../widgets/marketplace/marketplace_product_card.dart';
+import 'product_detail_screen_redesigned.dart';
 
 class FavoritesScreen extends StatelessWidget {
   final String userId;
@@ -112,7 +113,12 @@ class FavoritesScreen extends StatelessWidget {
               return MarketplaceProductCard(
                 product: product,
                 onTap: () {
-                  // TODO: Navigate to product detail
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ProductDetailScreenRedesigned(product: product),
+                    ),
+                  );
                 },
                 onFavorite: () {
                   _toggleFavorite(product.id);
