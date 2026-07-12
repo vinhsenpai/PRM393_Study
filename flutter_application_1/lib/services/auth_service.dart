@@ -127,12 +127,26 @@ class AuthService {
     final DocumentSnapshot<Map<String, dynamic>> existingSnap =
         await userRef.get();
 
-    final String name = displayName ?? user.displayName ?? '';
     final String email = user.email ?? '';
-    final String photoUrl = user.photoURL ?? '';
 
     final bool exists = existingSnap.exists;
     final Map<String, dynamic>? existingData = existingSnap.data();
+
+    final String? existingName = existingData?['name'] as String?;
+    final String? existingPhotoUrl = existingData?['photoUrl'] as String?;
+
+    final String? candidateName = displayName?.isNotEmpty == true
+        ? displayName
+        : (user.displayName?.isNotEmpty == true ? user.displayName : null);
+
+    final String? candidatePhotoUrl = user.photoURL?.isNotEmpty == true
+        ? user.photoURL
+        : null;
+
+    // IMPORTANT: Khi đăng nhập lại mà FirebaseAuth trả về name/photoUrl rỗng,
+    // không nên ghi đè dữ liệu Firestore hiện có bằng chuỗi rỗng.
+    final String name = candidateName ?? (existingName ?? '');
+    final String photoUrl = candidatePhotoUrl ?? (existingPhotoUrl ?? '');
 
     // Default role logic: preserve if exists, else use passed role or default to 'buyer'
     String finalRole = 'buyer';
