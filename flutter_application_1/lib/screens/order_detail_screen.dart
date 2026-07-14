@@ -425,16 +425,38 @@ class _OrderSummarySection extends StatelessWidget {
             const SizedBox(height: 12),
             _SummaryRow(
               label: 'Subtotal',
-              value: '\$${order.totalAmount.toStringAsFixed(2)}',
+              value: '\$${order.subtotal.toStringAsFixed(2)}',
             ),
             const SizedBox(height: 8),
-            // In a real app, we might have tax, shipping, discounts, etc.
-            // For now, total is the same as subtotal.
+            _SummaryRow(
+              label: 'Tax',
+              value: '\$${order.tax.toStringAsFixed(2)}',
+            ),
+            const SizedBox(height: 8),
+            _SummaryRow(
+              label: 'Service Fee',
+              value: '\$${order.serviceFee.toStringAsFixed(2)}',
+            ),
+            const SizedBox(height: 8),
             _SummaryRow(
               label: 'Total',
               value: '\$${order.totalAmount.toStringAsFixed(2)}',
               isTotal: true,
             ),
+            const SizedBox(height: 8),
+            _SummaryRow(
+              label: 'Payment',
+              value: order.paymentMethod == 'zalopay_sandbox'
+                  ? 'ZaloPay (Sandbox)'
+                  : 'Cash on Delivery',
+            ),
+            if (order.paymentInfo['zpTransId'] != null) ...[
+              const SizedBox(height: 8),
+              _SummaryRow(
+                label: 'Transaction ID',
+                value: '${order.paymentInfo['zpTransId']}',
+              ),
+            ],
           ],
         ),
       ),

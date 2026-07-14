@@ -7,6 +7,8 @@ class BillingSection extends StatelessWidget {
   final double tax;
   final double serviceFee;
   final double total;
+  final String? paymentMethod;
+  final String? transactionId;
 
   const BillingSection({
     super.key,
@@ -14,7 +16,20 @@ class BillingSection extends StatelessWidget {
     required this.tax,
     required this.serviceFee,
     required this.total,
+    this.paymentMethod,
+    this.transactionId,
   });
+
+  String get _paymentMethodLabel {
+    switch (paymentMethod) {
+      case 'zalopay_sandbox':
+        return 'ZaloPay (Sandbox)';
+      case 'cod':
+        return 'Cash on Delivery';
+      default:
+        return paymentMethod ?? '';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,6 +45,10 @@ class BillingSection extends StatelessWidget {
           '\$${total.toStringAsFixed(2)}',
           isTotal: true,
         ),
+        if (paymentMethod != null && paymentMethod!.isNotEmpty)
+          _buildBillingRow('Payment Method', _paymentMethodLabel),
+        if (transactionId != null && transactionId!.isNotEmpty)
+          _buildBillingRow('Transaction ID', transactionId!),
       ],
     );
   }

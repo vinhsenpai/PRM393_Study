@@ -165,6 +165,9 @@ class _SellerOrderDetailScreenState extends State<SellerOrderDetailScreen> {
               tax: order.tax,
               serviceFee: order.serviceFee,
               total: order.totalAmount,
+              paymentMethod: order.paymentMethod,
+              transactionId:
+                  order.paymentInfo['zpTransId']?.toString(),
             ),
           ),
           // Order Timeline

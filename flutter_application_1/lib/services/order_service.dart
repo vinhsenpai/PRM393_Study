@@ -15,7 +15,11 @@ class OrderService {
       _firestore.collection('orders');
 
   // Create a new order from cart items
-  Future<String> createOrder(List<Map<String, dynamic>> cartItems) async {
+  Future<String> createOrder(
+    List<Map<String, dynamic>> cartItems, {
+    String paymentMethod = 'cod',
+    Map<String, dynamic> paymentInfo = const {},
+  }) async {
     if (_userId.isEmpty) {
       throw Exception('User not authenticated');
     }
@@ -89,6 +93,8 @@ class OrderService {
       serviceFee: serviceFee,
       totalAmount: totalAmount,
       status: 'completed',
+      paymentMethod: paymentMethod,
+      paymentInfo: paymentInfo,
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
     );

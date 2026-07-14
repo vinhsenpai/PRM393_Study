@@ -57,6 +57,8 @@ class MarketplaceOrder {
   final double serviceFee;
   final double totalAmount;
   final String status; // pending, processing, completed, cancelled
+  final String paymentMethod; // zalopay_sandbox, cod
+  final Map<String, dynamic> paymentInfo; // gateway transaction details
   final Timestamp createdAt;
   final Timestamp updatedAt;
 
@@ -72,6 +74,8 @@ class MarketplaceOrder {
     required this.serviceFee,
     required this.totalAmount,
     required this.status,
+    this.paymentMethod = 'cod',
+    this.paymentInfo = const {},
     required this.createdAt,
     required this.updatedAt,
   });
@@ -89,6 +93,8 @@ class MarketplaceOrder {
       'serviceFee': serviceFee,
       'totalAmount': totalAmount,
       'status': status,
+      'paymentMethod': paymentMethod,
+      'paymentInfo': paymentInfo,
       'createdAt': createdAt,
       'updatedAt': updatedAt,
     };
@@ -109,6 +115,8 @@ class MarketplaceOrder {
       serviceFee: map['serviceFee']?.toDouble() ?? 0.0,
       totalAmount: map['totalAmount']?.toDouble() ?? 0.0,
       status: map['status'] ?? 'pending',
+      paymentMethod: map['paymentMethod'] ?? 'cod',
+      paymentInfo: Map<String, dynamic>.from(map['paymentInfo'] ?? {}),
       createdAt: map['createdAt'],
       updatedAt: map['updatedAt'],
     );

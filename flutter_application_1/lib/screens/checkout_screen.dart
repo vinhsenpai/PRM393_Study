@@ -1,9 +1,14 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../models/cart_item.dart';
 import '../providers/cart_provider.dart';
 import '../services/order_service.dart';
+import '../services/zalopay_service.dart';
 import '../theme/app_theme.dart';
 import 'order_success_screen.dart';
 
@@ -17,6 +22,26 @@ class CheckoutScreen extends StatefulWidget {
 class _CheckoutScreenState extends State<CheckoutScreen> {
   bool _isLoading = false;
   String? _error;
+  String _paymentMethod = 'zalopay_sandbox';
+
+  List<Map<String, dynamic>> _cartItemsPayload(CartProvider cartProvider) {
+    final List<Map<String, dynamic>> cartItems = [];
+    cartProvider.items.forEach((productId, cartItem) {
+      cartItems.add({
+        'productId': productId,
+        'title': cartItem.title,
+        'price': cartItem.price,
+        'quantity': cartItem.quantity,
+        'imageUrl': cartItem.imageUrl,
+        'sellerId': cartItem.sellerId, // Needed for order service to get sellerId
+      });
+    });
+    return cartItems;
+  }
+
+  // Must mirror OrderService: total = subtotal + 10% tax + 5% service fee.
+  double _orderTotal(CartProvider cartProvider) =>
+      cartProvider.totalPrice * 1.15;
 
   Future<void> _placeOrder() async {
     setState(() {
@@ -25,32 +50,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     });
 
     final cartProvider = context.read<CartProvider>();
-    final orderService = OrderService();
 
     try {
-      // Convert cart items to the format expected by order service
-      final List<Map<String, dynamic>> cartItems = [];
-      cartProvider.items.forEach((productId, cartItem) {
-        cartItems.add({
-          'productId': productId,
-          'title': cartItem.title,
-          'price': cartItem.price,
-          'quantity': cartItem.quantity,
-          'imageUrl': cartItem.imageUrl,
-          'sellerId': cartItem.sellerId, // Needed for order service to get sellerId
-        });
-      });
+      if (cartProvider.items.isEmpty) {
+        throw Exception('Cart is empty');
+      }
 
-      final orderId = await orderService.createOrder(cartItems);
-      await cartProvider.clearCart();
-
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) => OrderSuccessScreen(orderId: orderId),
-          ),
-        );
+      if (_paymentMethod == 'zalopay_sandbox') {
+        await _payWithZaloPay(cartProvider);
+      } else {
+        await _completeOrder(cartProvider, paymentMethod: 'cod');
       }
     } catch (e) {
       setState(() {
@@ -62,6 +71,99 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           SnackBar(content: Text('Error: $_error')),
         );
       }
+    }
+  }
+
+  Future<void> _payWithZaloPay(CartProvider cartProvider) async {
+    final zaloPayService = ZaloPayService();
+    final amountVnd = ZaloPayService.toVndAmount(_orderTotal(cartProvider));
+
+    final zpItems = cartProvider.items.entries
+        .map((e) => {
+              'itemid': e.key,
+              'itemname': e.value.title,
+              'itemprice': e.value.price.round(),
+              'itemquantity': e.value.quantity,
+            })
+        .toList();
+
+    // 1. Create the order on the ZaloPay sandbox gateway
+    final zpOrder = await zaloPayService.createOrder(
+      amountVnd: amountVnd,
+      description: 'Marketplace order - ${cartProvider.items.length} item(s)',
+      items: zpItems,
+    );
+
+    // 2. Open the ZaloPay payment page / sandbox app
+    final launched = await launchUrl(
+      Uri.parse(zpOrder.orderUrl),
+      mode: LaunchMode.externalApplication,
+    );
+    if (!launched) {
+      throw Exception('Could not open ZaloPay payment page');
+    }
+
+    if (!mounted) return;
+
+    // 3. Wait for the buyer to pay, polling the gateway for the result
+    final result = await showDialog<ZaloPayQueryResult>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => _ZaloPayWaitingDialog(
+        service: zaloPayService,
+        order: zpOrder,
+      ),
+    );
+
+    if (!mounted) return;
+
+    if (result == null) {
+      // Buyer cancelled while payment was still pending
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Payment cancelled')),
+      );
+      return;
+    }
+
+    if (result.status != ZaloPayStatus.paid) {
+      throw Exception('ZaloPay payment failed: ${result.message}');
+    }
+
+    // 4. Payment confirmed — record the order
+    await _completeOrder(
+      cartProvider,
+      paymentMethod: 'zalopay_sandbox',
+      paymentInfo: {
+        'gateway': 'zalopay_sandbox',
+        'appTransId': zpOrder.appTransId,
+        'zpTransId': result.zpTransId,
+        'amountVnd': result.amount,
+        'paidAt': DateTime.now().toIso8601String(),
+      },
+    );
+  }
+
+  Future<void> _completeOrder(
+    CartProvider cartProvider, {
+    required String paymentMethod,
+    Map<String, dynamic> paymentInfo = const {},
+  }) async {
+    final orderService = OrderService();
+    final orderId = await orderService.createOrder(
+      _cartItemsPayload(cartProvider),
+      paymentMethod: paymentMethod,
+      paymentInfo: paymentInfo,
+    );
+    await cartProvider.clearCart();
+
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => OrderSuccessScreen(orderId: orderId),
+        ),
+      );
     }
   }
 
@@ -99,8 +201,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
                 const Divider(height: 1),
 
-                // Payment Method Section (Placeholder)
-                _PaymentMethodSection(),
+                // Payment Method Section
+                _PaymentMethodSection(
+                  selectedMethod: _paymentMethod,
+                  onChanged: (method) =>
+                      setState(() => _paymentMethod = method),
+                ),
 
                 const SizedBox(height: 24),
 
@@ -108,9 +214,129 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 _PlaceOrderButton(
                   onPressed: _placeOrder,
                   isLoading: _isLoading,
+                  label: _paymentMethod == 'zalopay_sandbox'
+                      ? 'Pay with ZaloPay'
+                      : 'Place Order',
                 ),
               ],
             ),
+    );
+  }
+}
+
+/// Dialog shown while waiting for the buyer to complete payment in the
+/// ZaloPay sandbox app/page. Polls the gateway every few seconds and closes
+/// automatically once the payment succeeds or fails.
+class _ZaloPayWaitingDialog extends StatefulWidget {
+  final ZaloPayService service;
+  final ZaloPayOrder order;
+
+  const _ZaloPayWaitingDialog({
+    required this.service,
+    required this.order,
+  });
+
+  @override
+  State<_ZaloPayWaitingDialog> createState() => _ZaloPayWaitingDialogState();
+}
+
+class _ZaloPayWaitingDialogState extends State<_ZaloPayWaitingDialog> {
+  Timer? _pollTimer;
+  bool _checking = false;
+  String _statusMessage = 'Complete the payment in ZaloPay…';
+
+  static final NumberFormat _vndFormat =
+      NumberFormat.currency(locale: 'vi_VN', symbol: '₫', decimalDigits: 0);
+
+  @override
+  void initState() {
+    super.initState();
+    _pollTimer = Timer.periodic(
+      const Duration(seconds: 4),
+      (_) => _checkStatus(),
+    );
+  }
+
+  @override
+  void dispose() {
+    _pollTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _checkStatus() async {
+    if (_checking) return;
+    _checking = true;
+    try {
+      final result = await widget.service.queryOrder(widget.order.appTransId);
+      if (!mounted) return;
+      if (result.status == ZaloPayStatus.pending) {
+        setState(() => _statusMessage = 'Waiting for payment confirmation…');
+      } else {
+        _pollTimer?.cancel();
+        Navigator.of(context).pop(result);
+      }
+    } catch (_) {
+      // Network hiccup while polling — keep trying on the next tick.
+    } finally {
+      _checking = false;
+    }
+  }
+
+  Future<void> _reopenZaloPay() async {
+    await launchUrl(
+      Uri.parse(widget.order.orderUrl),
+      mode: LaunchMode.externalApplication,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Row(
+        children: [
+          Icon(Icons.account_balance_wallet, color: Colors.blue),
+          SizedBox(width: 8),
+          Expanded(
+            child: Text('ZaloPay Sandbox', style: TextStyle(fontSize: 18)),
+          ),
+        ],
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const CircularProgressIndicator(),
+          const SizedBox(height: 16),
+          Text(
+            _vndFormat.format(widget.order.amountVnd),
+            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            _statusMessage,
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.grey.shade600),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Order: ${widget.order.appTransId}',
+            style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(null),
+          child: const Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: _reopenZaloPay,
+          child: const Text('Open ZaloPay'),
+        ),
+        FilledButton(
+          onPressed: _checkStatus,
+          child: const Text('Check status'),
+        ),
+      ],
     );
   }
 }
@@ -289,7 +515,9 @@ class _CartItemTile extends StatelessWidget {
                       style: TextStyle(fontSize: 14),
                     ),
                     Text(
-                      '\$${item.price.toStringAsFixed(2)}',
+                      NumberFormat.currency(
+                              locale: 'vi_VN', symbol: '₫', decimalDigits: 0)
+                          .format(item.price),
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
@@ -300,38 +528,10 @@ class _CartItemTile extends StatelessWidget {
               ],
             ),
           ),
-          // Quantity Controls
-          Column(
-            children: [
-              IconButton(
-                onPressed: () {
-                  // This would be handled by the CartProvider in a real implementation
-                  // For now, we'll just show a toast or do nothing
-                },
-                icon: const Icon(Icons.remove),
-              ),
-              Text(
-                '${item.quantity}',
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-              ),
-              IconButton(
-                onPressed: () {
-                  // Similarly, this would call updateQuantity
-                },
-                icon: const Icon(Icons.add),
-              ),
-            ],
-          ),
-          // Remove Button
-          IconButton(
-            icon: const Icon(Icons.delete_outline, color: Colors.red),
-            onPressed: () {
-              // In a real app, we would call cartProvider.removeFromCart(item.productId)
-              // For now, we'll just show a snackbar
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Item removed from cart')),
-              );
-            },
+          // Quantity
+          Text(
+            'x${item.quantity}',
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
           ),
         ],
       ),
@@ -348,8 +548,16 @@ class _OrderSummarySection extends StatelessWidget {
     required this.subtotal,
   });
 
+  static final NumberFormat _vnd =
+      NumberFormat.currency(locale: 'vi_VN', symbol: '₫', decimalDigits: 0);
+
   @override
   Widget build(BuildContext context) {
+    // Must mirror OrderService: 10% tax, 5% service fee
+    final tax = subtotal * 0.10;
+    final serviceFee = subtotal * 0.05;
+    final total = subtotal + tax + serviceFee;
+
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -369,25 +577,12 @@ class _OrderSummarySection extends StatelessWidget {
             style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
           ),
           const SizedBox(height: 8),
-          // Subtotal
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Subtotal:',
-                style: TextStyle(fontSize: 16),
-              ),
-              Text(
-                '\$${subtotal.toStringAsFixed(2)}',
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
+          _summaryRow('Subtotal:', _vnd.format(subtotal)),
           const SizedBox(height: 4),
-          // Total (same as subtotal since no tax/shipping in this example)
+          _summaryRow('Tax (10%):', _vnd.format(tax)),
+          const SizedBox(height: 4),
+          _summaryRow('Service fee (5%):', _vnd.format(serviceFee)),
+          const Divider(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -399,7 +594,7 @@ class _OrderSummarySection extends StatelessWidget {
                 ),
               ),
               Text(
-                '\$${subtotal.toStringAsFixed(2)}',
+                _vnd.format(total),
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -412,9 +607,30 @@ class _OrderSummarySection extends StatelessWidget {
       ),
     );
   }
+
+  Widget _summaryRow(String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: const TextStyle(fontSize: 16)),
+        Text(
+          value,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+      ],
+    );
+  }
 }
 
 class _PaymentMethodSection extends StatelessWidget {
+  final String selectedMethod;
+  final ValueChanged<String> onChanged;
+
+  const _PaymentMethodSection({
+    required this.selectedMethod,
+    required this.onChanged,
+  });
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -430,19 +646,35 @@ class _PaymentMethodSection extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          // Placeholder for payment method selection
-          ListTile(
-            leading: Icon(Icons.credit_card, color: Theme.of(context).colorScheme.primary),
-            title: const Text('Credit/Debit Card'),
-            subtitle: const Text('**** **** **** 1234'),
-            trailing: const Icon(Icons.chevron_right),
-          ),
-          const Divider(height: 1),
-          ListTile(
-            leading: Icon(Icons.paypal, color: Theme.of(context).colorScheme.primary),
-            title: const Text('PayPal'),
-            subtitle: const Text('linked to paypal@example.com'),
-            trailing: const Icon(Icons.chevron_right),
+          RadioGroup<String>(
+            groupValue: selectedMethod,
+            onChanged: (v) {
+              if (v != null) onChanged(v);
+            },
+            child: Column(
+              children: [
+                RadioListTile<String>(
+                  value: 'zalopay_sandbox',
+                  secondary: Icon(
+                    Icons.account_balance_wallet,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  title: const Text('ZaloPay (Sandbox)'),
+                  subtitle:
+                      const Text('Test payment — no real money is charged'),
+                ),
+                const Divider(height: 1),
+                RadioListTile<String>(
+                  value: 'cod',
+                  secondary: Icon(
+                    Icons.payments_outlined,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  title: const Text('Cash on Delivery'),
+                  subtitle: const Text('Pay when you receive the order'),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -453,10 +685,12 @@ class _PaymentMethodSection extends StatelessWidget {
 class _PlaceOrderButton extends StatelessWidget {
   final VoidCallback onPressed;
   final bool isLoading;
+  final String label;
 
   const _PlaceOrderButton({
     required this.onPressed,
     required this.isLoading,
+    required this.label,
   });
 
   @override
@@ -484,9 +718,9 @@ class _PlaceOrderButton extends StatelessWidget {
                     valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                   ),
                 )
-              : const Text(
-                  'Place Order',
-                  style: TextStyle(
+              : Text(
+                  label,
+                  style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                   ),
