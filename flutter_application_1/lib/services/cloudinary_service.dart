@@ -1,18 +1,16 @@
-import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:image_picker/image_picker.dart';
 
 class CloudinaryService {
-  // Thay thế bằng thông tin Cloudinary của bạn
-  static const String cloudName = 'uq2q3uim'; // Cloud Name của bạn
-  static const String uploadPreset =
-      'flutter_upload'; // Thay thế bằng Upload Preset của bạn
+  static const String cloudName = 'dvoexcswb';
+  static const String uploadPreset = 'PRM_flutter_app';
 
-  // Upload 1 ảnh lên Cloudinary (unsigned - không cần secret)
-  static Future<String> uploadImage(File imageFile) async {
+  // Upload 1 ảnh lên Cloudinary (unsigned)
+  static Future<String> uploadImage(XFile imageFile) async {
     try {
       print('=== Bắt đầu upload ảnh lên Cloudinary ===');
-      print('File path: ${imageFile.path}');
+      print('File name: ${imageFile.name}');
 
       final uri = Uri.parse(
         'https://api.cloudinary.com/v1_1/$cloudName/image/upload',
@@ -23,10 +21,15 @@ class CloudinaryService {
       request.fields['upload_preset'] = uploadPreset;
       print('Upload preset: $uploadPreset');
 
-      // Thêm file ảnh vào request
-      final file = await http.MultipartFile.fromPath('file', imageFile.path);
+      // Đọc file thành bytes (chạy tốt trên cả Web và Mobile)
+      final bytes = await imageFile.readAsBytes();
+      final file = http.MultipartFile.fromBytes(
+        'file',
+        bytes,
+        filename: imageFile.name,
+      );
       request.files.add(file);
-      print('Đã thêm file vào request: ${file.filename}');
+      print('Đã thêm file vào request: ${imageFile.name}');
 
       // Gửi request
       print('Đang gửi request đến Cloudinary...');
@@ -54,7 +57,7 @@ class CloudinaryService {
   }
 
   // Upload nhiều ảnh lên Cloudinary
-  static Future<List<String>> uploadImages(List<File> imageFiles) async {
+  static Future<List<String>> uploadImages(List<XFile> imageFiles) async {
     final List<String> imageUrls = [];
 
     for (final file in imageFiles) {
@@ -65,3 +68,4 @@ class CloudinaryService {
     return imageUrls;
   }
 }
+

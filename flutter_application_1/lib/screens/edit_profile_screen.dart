@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -25,7 +26,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final _nameController = TextEditingController();
 
   bool _isSaving = false;
-  File? _pickedImage;
+  XFile? _pickedImage;
 
   @override
   void initState() {
@@ -48,7 +49,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final picked = await picker.pickImage(source: ImageSource.gallery);
     if (picked == null) return;
     setState(() {
-      _pickedImage = File(picked.path);
+      _pickedImage = picked;
     });
   }
 
@@ -127,7 +128,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       CircleAvatar(
                         radius: 60,
                         backgroundImage: _pickedImage != null
-                            ? FileImage(_pickedImage!)
+                            ? (kIsWeb
+                                ? NetworkImage(_pickedImage!.path)
+                                : FileImage(File(_pickedImage!.path))) as ImageProvider
                             : (user.photoUrl?.isNotEmpty ?? false)
                                 ? NetworkImage(user.photoUrl!)
                                 : null,

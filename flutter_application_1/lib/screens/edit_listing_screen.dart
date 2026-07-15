@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import '../models/product.dart';
 import '../services/product_service.dart';
 import '../services/cloudinary_service.dart';
@@ -33,7 +34,7 @@ class _EditListingScreenState extends State<EditListingScreen> {
   final _accountNameController = TextEditingController();
   final _passwordController = TextEditingController();
   final ProductService _productService = ProductService();
-  final List<File> _selectedImages = [];
+  final List<XFile> _selectedImages = [];
   List<String> _imageUrls = [];
   bool _isLoading = false;
   ProductStatus _selectedStatus = ProductStatus.available;
@@ -70,7 +71,7 @@ class _EditListingScreenState extends State<EditListingScreen> {
       final pickedFiles = await ImagePicker().pickMultiImage();
       if (pickedFiles.isNotEmpty) {
         setState(() {
-          _selectedImages.addAll(pickedFiles.map((x) => File(x.path)));
+          _selectedImages.addAll(pickedFiles);
         });
       }
     } catch (e) {
@@ -197,10 +198,15 @@ class _EditListingScreenState extends State<EditListingScreen> {
                                       margin: const EdgeInsets.only(right: 8),
                                       width: 100,
                                       child: isNew
-                                          ? Image.file(
-                                              _selectedImages[imageIndex],
-                                              fit: BoxFit.cover,
-                                            )
+                                          ? (kIsWeb
+                                              ? Image.network(
+                                                  _selectedImages[imageIndex].path,
+                                                  fit: BoxFit.cover,
+                                                )
+                                              : Image.file(
+                                                  File(_selectedImages[imageIndex].path),
+                                                  fit: BoxFit.cover,
+                                                ))
                                           : Image.network(
                                               _imageUrls[imageIndex],
                                               fit: BoxFit.cover,

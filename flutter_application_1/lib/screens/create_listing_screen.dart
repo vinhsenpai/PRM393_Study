@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import '../models/product.dart';
 import '../services/product_service.dart';
 import '../services/cloudinary_service.dart';
@@ -26,7 +27,7 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
   final _accountNameController = TextEditingController();
   final _passwordController = TextEditingController();
   final ProductService _productService = ProductService();
-  final List<File> _selectedImages = [];
+  final List<XFile> _selectedImages = [];
   List<String> _imageUrls = [];
   bool _isLoading = false;
 
@@ -47,7 +48,7 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
       final pickedFiles = await ImagePicker().pickMultiImage();
       if (pickedFiles.isNotEmpty) {
         setState(() {
-          _selectedImages.addAll(pickedFiles.map((x) => File(x.path)));
+          _selectedImages.addAll(pickedFiles);
         });
       }
     } catch (e) {
@@ -164,10 +165,15 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
                                     Container(
                                       margin: const EdgeInsets.only(right: 8),
                                       width: 100,
-                                      child: Image.file(
-                                        _selectedImages[index],
-                                        fit: BoxFit.cover,
-                                      ),
+                                      child: kIsWeb
+                                          ? Image.network(
+                                              _selectedImages[index].path,
+                                              fit: BoxFit.cover,
+                                            )
+                                          : Image.file(
+                                              File(_selectedImages[index].path),
+                                              fit: BoxFit.cover,
+                                            ),
                                     ),
                                     Positioned(
                                       top: 4,

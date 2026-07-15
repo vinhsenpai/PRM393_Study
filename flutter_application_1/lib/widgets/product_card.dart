@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 import '../models/product.dart';
 import '../theme/app_theme.dart';
@@ -71,7 +72,7 @@ class ProductCard extends StatelessWidget {
                     top: Radius.circular(12),
                   ),
                   child: coverUrl != null
-                      ? _isLocalPath(coverUrl)
+                      ? (_isLocalPath(coverUrl) && !kIsWeb)
                             ? Image.file(
                                 File(coverUrl),
                                 fit: BoxFit.cover,
