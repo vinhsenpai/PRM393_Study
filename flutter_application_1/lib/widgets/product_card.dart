@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
 import '../models/product.dart';
-import '../theme/app_theme.dart';
 
 class ProductCard extends StatelessWidget {
   final Product product;
@@ -11,7 +10,7 @@ class ProductCard extends StatelessWidget {
 
   const ProductCard({super.key, required this.product, this.onTap});
 
-  // Helper để kiểm tra đường dẫn là local file hay network
+  // Helper to check if path is local or network
   bool _isLocalPath(String path) {
     return path.startsWith('/') || path.contains('Documents');
   }
@@ -20,22 +19,32 @@ class ProductCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       height: double.infinity,
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            Colors.deepPurple.withValues(alpha: 0.2),
-            Colors.indigo.withValues(alpha: 0.2),
-          ],
+          colors: [Color(0xFF6366F1), Color(0xFF10B981)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
       ),
       child: const Icon(
-        Icons.videogame_asset,
+        Icons.sports_esports,
         size: 32,
-        color: Colors.deepPurple,
+        color: Colors.white,
       ),
     );
+  }
+
+  Color _getStatusColor(ProductStatus status) {
+    switch (status) {
+      case ProductStatus.available:
+        return const Color(0xFF10B981);
+      case ProductStatus.reserved:
+        return const Color(0xFFF59E0B);
+      case ProductStatus.sold:
+        return const Color(0xFFEF4444);
+      case ProductStatus.hidden:
+        return const Color(0xFF94A3B8);
+    }
   }
 
   @override
@@ -44,22 +53,18 @@ class ProductCard extends StatelessWidget {
         ? null
         : product.imageUrls.first;
 
+    final statusColor = _getStatusColor(product.stockStatus);
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: SizedBox(
-        width: 130,
+        width: 140,
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
-            color: Colors.white,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
-                blurRadius: 4,
-                offset: const Offset(0, 2),
-              ),
-            ],
+            color: const Color(0xFF1E293B), // Slate 800
+            border: Border.all(color: const Color(0xFF334155), width: 1),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -69,26 +74,26 @@ class ProductCard extends StatelessWidget {
                 aspectRatio: 1 / 1,
                 child: ClipRRect(
                   borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(12),
+                    top: Radius.circular(11),
                   ),
                   child: coverUrl != null
                       ? (_isLocalPath(coverUrl) && !kIsWeb)
-                            ? Image.file(
-                                File(coverUrl),
-                                fit: BoxFit.cover,
-                                width: double.infinity,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return _buildImagePlaceholder(context);
-                                },
-                              )
-                            : Image.network(
-                                coverUrl,
-                                fit: BoxFit.cover,
-                                width: double.infinity,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return _buildImagePlaceholder(context);
-                                },
-                              )
+                          ? Image.file(
+                              File(coverUrl),
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                              errorBuilder: (context, error, stackTrace) {
+                                return _buildImagePlaceholder(context);
+                              },
+                            )
+                          : Image.network(
+                              coverUrl,
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                              errorBuilder: (context, error, stackTrace) {
+                                return _buildImagePlaceholder(context);
+                              },
+                            )
                       : _buildImagePlaceholder(context),
                 ),
               ),
@@ -103,6 +108,7 @@ class ProductCard extends StatelessWidget {
                       style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
+                        color: Color(0xFFF8FAFC),
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -110,27 +116,23 @@ class ProductCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       '${product.price.toStringAsFixed(0)} đ',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.primaryColor,
+                        fontWeight: FontWeight.w900,
+                        color: Color(0xFFF59E0B),
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 6),
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 6,
                         vertical: 2,
                       ),
                       decoration: BoxDecoration(
-                        color: _getStatusColor(
-                          product.stockStatus,
-                        ).withValues(alpha: 0.1),
+                        color: statusColor.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(4),
                         border: Border.all(
-                          color: _getStatusColor(
-                            product.stockStatus,
-                          ).withValues(alpha: 0.3),
+                          color: statusColor.withValues(alpha: 0.3),
                         ),
                       ),
                       child: Text(
@@ -140,9 +142,9 @@ class ProductCard extends StatelessWidget {
                             .last
                             .toUpperCase(),
                         style: TextStyle(
-                          fontSize: 10,
+                          fontSize: 9,
                           fontWeight: FontWeight.bold,
-                          color: _getStatusColor(product.stockStatus),
+                          color: statusColor,
                         ),
                       ),
                     ),
@@ -154,18 +156,5 @@ class ProductCard extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  Color _getStatusColor(ProductStatus status) {
-    switch (status) {
-      case ProductStatus.available:
-        return Colors.green;
-      case ProductStatus.reserved:
-        return Colors.orange;
-      case ProductStatus.sold:
-        return Colors.red;
-      case ProductStatus.hidden:
-        return Colors.grey;
-    }
   }
 }

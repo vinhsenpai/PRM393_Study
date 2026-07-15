@@ -34,7 +34,9 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Seller Dashboard'),
-        backgroundColor: AppTheme.primaryColor,
+        backgroundColor: const Color(0xFF0F172A),
+        foregroundColor: const Color(0xFFF8FAFC),
+        elevation: 0,
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
@@ -261,9 +263,17 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
+          color: const Color(0xFF1E293B), // Surface Dark
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withValues(alpha: 0.3)),
+          border: Border.all(color: color.withValues(alpha: 0.5), width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: color.withValues(alpha: 0.15),
+              blurRadius: 10,
+              spreadRadius: 1,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -281,9 +291,9 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
             const SizedBox(height: 4),
             Text(
               label,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 14,
-                color: Colors.grey[600],
+                color: Color(0xFF94A3B8), // Text Secondary
               ),
               textAlign: TextAlign.center,
             ),
@@ -300,10 +310,11 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
   ) {
     return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: AppTheme.primaryColor.withValues(alpha: 0.1),
+          color: const Color(0xFF1E293B), // Surface Dark
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: AppTheme.primaryColor.withValues(alpha: 0.3),
@@ -319,7 +330,7 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: AppTheme.primaryColor,
+                color: Color(0xFFF8FAFC),
               ),
               textAlign: TextAlign.center,
             ),

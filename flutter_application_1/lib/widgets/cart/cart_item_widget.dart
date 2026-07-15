@@ -106,7 +106,7 @@ class CartItemWidget extends StatelessWidget {
                       currencyFormat.format(item.price),
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             fontWeight: FontWeight.w700,
-                            color: Theme.of(context).colorScheme.primary,
+                            color: const Color(0xFFF59E0B),
                           ),
                     ),
                     const SizedBox(height: 10),
@@ -122,6 +122,7 @@ class CartItemWidget extends StatelessWidget {
                           currencyFormat.format(item.price * item.quantity),
                           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.w900,
+                                color: const Color(0xFFF59E0B),
                               ),
                         ),
                       ],

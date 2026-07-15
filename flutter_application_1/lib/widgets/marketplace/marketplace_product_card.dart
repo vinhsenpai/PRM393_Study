@@ -21,13 +21,13 @@ class MarketplaceProductCard extends StatelessWidget {
   Color _statusColor(ProductStatus status) {
     switch (status) {
       case ProductStatus.available:
-        return Colors.green;
+        return const Color(0xFF10B981);
       case ProductStatus.reserved:
-        return Colors.orange;
+        return const Color(0xFFF59E0B);
       case ProductStatus.sold:
-        return Colors.red;
+        return const Color(0xFFEF4444);
       case ProductStatus.hidden:
-        return Colors.grey;
+        return const Color(0xFF94A3B8);
     }
   }
 
@@ -38,20 +38,17 @@ class MarketplaceProductCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       height: double.infinity,
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            Colors.deepPurple.withValues(alpha: 0.2),
-            Colors.indigo.withValues(alpha: 0.2),
-          ],
+          colors: [Color(0xFF6366F1), Color(0xFF10B981)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
       ),
       child: const Icon(
-        Icons.videogame_asset,
+        Icons.sports_esports,
         size: 48,
-        color: Colors.deepPurple,
+        color: Colors.white,
       ),
     );
   }
@@ -70,23 +67,17 @@ class MarketplaceProductCard extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
+          color: const Color(0xFF1E293B), // Slate 800
+          border: Border.all(color: const Color(0xFF334155), width: 1),
         ),
         child: Column(
-crossAxisAlignment: CrossAxisAlignment.stretch,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Image section with reduced height (1:1 aspect ratio)
             AspectRatio(
               aspectRatio: 1 / 1,
               child: ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
                 child: Stack(
                   children: [
                     if (coverUrl != null)
@@ -110,9 +101,9 @@ crossAxisAlignment: CrossAxisAlignment.stretch,
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: statusColor.withValues(alpha: 0.14),
+                          color: statusColor.withValues(alpha: 0.12),
                           border: Border.all(
-                            color: statusColor.withValues(alpha: 0.35),
+                            color: statusColor.withValues(alpha: 0.3),
                             width: 0.9,
                           ),
                           borderRadius: BorderRadius.circular(999),
@@ -120,7 +111,7 @@ crossAxisAlignment: CrossAxisAlignment.stretch,
                         child: Text(
                           _statusText(product.stockStatus),
                           style: TextStyle(
-                            fontSize: 11,
+                            fontSize: 10,
                             fontWeight: FontWeight.w800,
                             color: statusColor,
                           ),
@@ -141,7 +132,7 @@ crossAxisAlignment: CrossAxisAlignment.stretch,
                             width: 36,
                             height: 36,
                             decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.35),
+                              color: Colors.black.withValues(alpha: 0.4),
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
@@ -160,7 +151,7 @@ crossAxisAlignment: CrossAxisAlignment.stretch,
               ),
             ),
 
-            // Body with increased emphasis on title and price
+            // Body
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
               child: Column(
@@ -172,7 +163,8 @@ crossAxisAlignment: CrossAxisAlignment.stretch,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontWeight: FontWeight.w900,
-                      fontSize: 16,
+                      fontSize: 15,
+                      color: Color(0xFFF8FAFC),
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -180,9 +172,9 @@ crossAxisAlignment: CrossAxisAlignment.stretch,
                     product.game,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.black.withValues(alpha: 0.6),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFF94A3B8),
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -192,10 +184,10 @@ crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Text(
                         '${product.price.toStringAsFixed(0)} đ',
-                        style: TextStyle(
-                          fontSize: 18,
+                        style: const TextStyle(
+                          fontSize: 16,
                           fontWeight: FontWeight.w900,
-                          color: AppTheme.primaryColor,
+                          color: Color(0xFFF59E0B),
                         ),
                       ),
                       if (product.tags.isNotEmpty)
@@ -203,15 +195,18 @@ crossAxisAlignment: CrossAxisAlignment.stretch,
                           padding: const EdgeInsets.symmetric(
                               horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
-                            color: AppTheme.primaryColor.withValues(alpha: 0.08),
+                            color: AppTheme.primaryColor.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(999),
+                            border: Border.all(
+                              color: AppTheme.primaryColor.withValues(alpha: 0.3),
+                            ),
                           ),
                           child: Text(
                             product.tags.first,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 11,
+                            style: const TextStyle(
+                              fontSize: 10,
                               fontWeight: FontWeight.w800,
                               color: AppTheme.primaryColor,
                             ),
@@ -228,4 +223,3 @@ crossAxisAlignment: CrossAxisAlignment.stretch,
     );
   }
 }
-

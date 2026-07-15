@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/cart_provider.dart';
-import '../screens/order_history_screen.dart';
+import '../navigation/buyer_navigation_shell.dart';
 import '../theme/app_theme.dart';
 
 class OrderSuccessScreen extends StatelessWidget {
@@ -16,9 +16,13 @@ class OrderSuccessScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFF0F172A), // Background Dark
       appBar: AppBar(
         title: const Text('Order Success'),
+        backgroundColor: const Color(0xFF0F172A),
+        foregroundColor: const Color(0xFFF8FAFC),
         automaticallyImplyLeading: false,
+        elevation: 0,
       ),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
@@ -28,7 +32,7 @@ class OrderSuccessScreen extends StatelessWidget {
             const Icon(
               Icons.check_circle_outline,
               size: 80,
-              color: Colors.green,
+              color: Color(0xFF10B981), // Emerald Green
             ),
             const SizedBox(height: 24),
             const Text(
@@ -36,6 +40,7 @@ class OrderSuccessScreen extends StatelessWidget {
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
+                color: Color(0xFFF8FAFC),
               ),
               textAlign: TextAlign.center,
             ),
@@ -45,6 +50,7 @@ class OrderSuccessScreen extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
+                color: Color(0xFF94A3B8),
               ),
             ),
             const SizedBox(height: 32),
@@ -52,25 +58,20 @@ class OrderSuccessScreen extends StatelessWidget {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  // Clear cart again just in case (already cleared in checkout)
                   context.read<CartProvider>().clearCart();
-                  // Navigate to order history
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const OrderHistoryScreen(),
-                    ),
-                  );
+                  // Reset stack to the shell and switch to tab index 2 (Orders)
+                  Navigator.popUntil(context, (route) => route.isFirst);
+                  BuyerNavigationShell.navKey.currentState?.setSelectedIndex(2);
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.primaryColor,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(999), // pill shape
                   ),
                 ),
-                child: const Text('View Order History'),
+                child: const Text('View Orders'),
               ),
             ),
             const SizedBox(height: 16),
@@ -78,16 +79,17 @@ class OrderSuccessScreen extends StatelessWidget {
               width: double.infinity,
               child: OutlinedButton(
                 onPressed: () {
-                  // Clear cart and go to home
                   context.read<CartProvider>().clearCart();
-                  // Navigate to home (assuming we have a home screen)
-                  // For now, we'll just pop to the root
-                  Navigator.of(context).popUntil((route) => route.isFirst);
+                  // Reset stack to the shell and switch to tab index 0 (Home/Shop)
+                  Navigator.popUntil(context, (route) => route.isFirst);
+                  BuyerNavigationShell.navKey.currentState?.setSelectedIndex(0);
                 },
                 style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFFF8FAFC),
+                  side: const BorderSide(color: Color(0xFF334155)),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(999), // pill shape
                   ),
                 ),
                 child: const Text('Continue Shopping'),

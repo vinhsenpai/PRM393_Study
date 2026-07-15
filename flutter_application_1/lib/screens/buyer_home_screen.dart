@@ -54,11 +54,16 @@ child: ProductCatalogScreen(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: const BoxDecoration(
-        color: Colors.deepPurple,
+        gradient: LinearGradient(
+          colors: [Color(0xFF1E293B), Color(0xFF0F172A)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(32),
           bottomRight: Radius.circular(32),
         ),
+        border: Border(bottom: BorderSide(color: Color(0xFF334155), width: 1)),
       ),
       child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -66,7 +71,7 @@ child: ProductCatalogScreen(
           Text(
             'Welcome Back!',
             style: TextStyle(
-              color: Colors.white,
+              color: Color(0xFFF8FAFC),
               fontSize: 24,
               fontWeight: FontWeight.bold,
             ),
@@ -75,7 +80,7 @@ child: ProductCatalogScreen(
           Text(
             'Find your dream game account today.',
             style: TextStyle(
-              color: Colors.white70,
+              color: Color(0xFF94A3B8),
               fontSize: 16,
             ),
           ),
@@ -87,16 +92,26 @@ child: ProductCatalogScreen(
   Widget _buildSearchBar() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
-child: TextField(
+      child: TextField(
         onChanged: (v) => setState(() => _searchQuery = v),
+        style: const TextStyle(color: Color(0xFFF8FAFC)),
         decoration: InputDecoration(
           hintText: 'Search game accounts...',
-          prefixIcon: const Icon(Icons.search),
+          hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
+          prefixIcon: const Icon(Icons.search, color: Color(0xFF94A3B8)),
           filled: true,
-          fillColor: Colors.white,
+          fillColor: const Color(0xFF1E293B),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide.none,
+            borderSide: const BorderSide(color: Color(0xFF334155)),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFF334155)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFF6366F1), width: 1.5),
           ),
           contentPadding: const EdgeInsets.symmetric(vertical: 0),
         ),

@@ -25,9 +25,10 @@ class OrderSummaryBar extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
+          border: const Border(top: BorderSide(color: Color(0xFF334155), width: 1)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
+              color: Colors.black.withValues(alpha: 0.25),
               blurRadius: 14,
               offset: const Offset(0, -6),
             )
@@ -43,7 +44,7 @@ class OrderSummaryBar extends StatelessWidget {
                   Text(
                     '$totalItems items',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.black54,
+                          color: const Color(0xFF94A3B8),
                           fontWeight: FontWeight.w700,
                         ),
                   ),
@@ -51,7 +52,8 @@ class OrderSummaryBar extends StatelessWidget {
                   Text(
                     currencyFormat.format(totalPrice),
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-fontWeight: FontWeight.w900,
+                          fontWeight: FontWeight.w900,
+                          color: const Color(0xFFF59E0B),
                         ),
                   ),
                 ],

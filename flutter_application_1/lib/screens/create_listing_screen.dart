@@ -6,6 +6,7 @@ import '../models/product.dart';
 import '../services/product_service.dart';
 import '../services/cloudinary_service.dart';
 import '../theme/app_theme.dart';
+import 'product_detail_screen_redesigned.dart';
 
 class CreateListingScreen extends StatefulWidget {
   final String sellerId;
@@ -100,25 +101,36 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
         updatedAt: DateTime.now(),
       );
 
-      await _productService.createProduct(product);
+      final String docId = await _productService.createProduct(product);
+      final createdProduct = Product(
+        id: docId,
+        sellerId: product.sellerId,
+        title: product.title,
+        description: product.description,
+        game: product.game,
+        price: product.price,
+        imageUrls: product.imageUrls.isNotEmpty
+            ? product.imageUrls
+            : const ['https://picsum.photos/id/1/800/600'],
+        tags: product.tags,
+        stockStatus: product.stockStatus,
+        accountName: product.accountName,
+        password: product.password,
+        createdAt: product.createdAt,
+        updatedAt: product.updatedAt,
+      );
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Tạo sản phẩm thành công!')),
         );
 
-        // Clear form
-        _titleController.clear();
-        _descriptionController.clear();
-        _gameController.clear();
-        _priceController.clear();
-        _tagsController.clear();
-        _accountNameController.clear();
-        _passwordController.clear();
-        setState(() {
-          _selectedImages.clear();
-          _imageUrls = [];
-        });
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ProductDetailScreenRedesigned(product: createdProduct),
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
@@ -138,7 +150,9 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Tạo sản phẩm mới'),
-        backgroundColor: AppTheme.primaryColor,
+        backgroundColor: const Color(0xFF0F172A),
+        foregroundColor: const Color(0xFFF8FAFC),
+        elevation: 0,
       ),
       body: _isLoading
           ? const Center(

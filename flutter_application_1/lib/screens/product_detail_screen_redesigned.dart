@@ -7,6 +7,8 @@ import '../services/product_service.dart';
 import '../providers/auth_provider.dart';
 import '../providers/cart_provider.dart';
 import '../screens/chat_screen.dart';
+import '../screens/checkout_screen.dart';
+import '../navigation/buyer_navigation_shell.dart';
 import '../widgets/marketplace/marketplace_image_carousel.dart';
 import '../widgets/marketplace/marketplace_widgets.dart';
 import '../widgets/marketplace/sticky_product_action_bar.dart';
@@ -106,15 +108,16 @@ class _ProductDetailScreenRedesignedState
     final desc = _product.description.trim();
 
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
+      backgroundColor: const Color(0xFF0F172A), // Background Dark
       appBar: AppBar(
         title: Text(
           _product.title,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
+          style: const TextStyle(color: Color(0xFFF8FAFC), fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Colors.transparent,
-        foregroundColor: Colors.black,
+        backgroundColor: const Color(0xFF0F172A),
+        foregroundColor: const Color(0xFFF8FAFC),
         elevation: 0,
       ),
       body: Stack(
@@ -123,6 +126,7 @@ class _ProductDetailScreenRedesignedState
             bottom: false,
             child: RefreshIndicator(
               onRefresh: _refresh,
+              color: const Color(0xFF6366F1),
               child: CustomScrollView(
                 slivers: [
                   SliverToBoxAdapter(
@@ -155,7 +159,10 @@ class _ProductDetailScreenRedesignedState
                           if (tags.isEmpty)
                             const Padding(
                               padding: EdgeInsets.only(top: 2),
-                              child: Text('No tags'),
+                              child: Text(
+                                'No tags',
+                                style: TextStyle(color: Color(0xFF94A3B8)),
+                              ),
                             ),
                           const SizedBox(height: 16),
                           Text(
@@ -165,11 +172,15 @@ class _ProductDetailScreenRedesignedState
                                 .titleMedium
                                 ?.copyWith(
                                   fontWeight: FontWeight.w800,
+                                  color: const Color(0xFFF8FAFC),
                                 ),
                           ),
                           const SizedBox(height: 10),
                           if (desc.isEmpty)
-                            const Text('No description available.')
+                            const Text(
+                              'No description available.',
+                              style: TextStyle(color: Color(0xFF94A3B8)),
+                            )
                           else
                             ExpandableText(
                               text: _product.description,
@@ -177,11 +188,11 @@ class _ProductDetailScreenRedesignedState
                               style: Theme.of(context)
                                   .textTheme
                                   .bodyMedium
-                                  ?.copyWith(height: 1.5),
+                                  ?.copyWith(height: 1.5, color: const Color(0xFF94A3B8)),
                               readMoreText: 'Read more',
                               readLessText: 'Read less',
                             ),
-                          const SizedBox(height: 88),
+                          const SizedBox(height: 100),
                         ],
                       ),
                     ),
@@ -195,6 +206,7 @@ class _ProductDetailScreenRedesignedState
             right: 0,
             bottom: 0,
             child: StickyProductActionBar(
+              isAvailable: available,
               onContact: () async {
                 if (buyerId.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -260,8 +272,10 @@ class _ProductDetailScreenRedesignedState
 
                 await cart.addToCart(_product);
                 if (!context.mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Added to cart.')),
+
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const CheckoutScreen()),
                 );
               },
               onAddToCart: () async {
@@ -276,8 +290,28 @@ class _ProductDetailScreenRedesignedState
 
                 await cart.addToCart(_product);
                 if (!context.mounted) return;
+
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Added to cart.')),
+                  SnackBar(
+                    backgroundColor: const Color(0xFF1E293B),
+                    content: const Text(
+                      'Product added to cart!',
+                      style: TextStyle(color: Color(0xFFF8FAFC)),
+                    ),
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      side: const BorderSide(color: Color(0xFF334155)),
+                    ),
+                    action: SnackBarAction(
+                      label: 'VIEW CART',
+                      textColor: const Color(0xFF6366F1),
+                      onPressed: () {
+                        Navigator.popUntil(context, (route) => route.isFirst);
+                        BuyerNavigationShell.navKey.currentState?.setSelectedIndex(1);
+                      },
+                    ),
+                  ),
                 );
               },
             ),
@@ -302,8 +336,8 @@ class _InfoBlock extends StatelessWidget {
   });
 
   Color _badgeColor(BuildContext context) {
-    if (available) return Colors.green;
-    return Colors.redAccent;
+    if (available) return const Color(0xFF10B981);
+    return const Color(0xFFEF4444);
   }
 
   @override
@@ -318,7 +352,7 @@ class _InfoBlock extends StatelessWidget {
           style: Theme.of(context)
               .textTheme
               .bodyLarge
-              ?.copyWith(fontWeight: FontWeight.w700),
+              ?.copyWith(fontWeight: FontWeight.w700, color: const Color(0xFF6366F1)),
         ),
         const SizedBox(height: 6),
         Row(
@@ -328,6 +362,7 @@ class _InfoBlock extends StatelessWidget {
                 priceText,
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.w900,
+                      color: const Color(0xFFF59E0B), // Accent Amber Price
                     ),
               ),
             ),
@@ -336,7 +371,7 @@ class _InfoBlock extends StatelessWidget {
               decoration: BoxDecoration(
                 color: badgeColor.withValues(alpha: 0.12),
                 border: Border.all(
-                  color: badgeColor.withValues(alpha: 0.35),
+                  color: badgeColor.withValues(alpha: 0.3),
                 ),
                 borderRadius: BorderRadius.circular(999),
               ),
@@ -356,10 +391,9 @@ class _InfoBlock extends StatelessWidget {
           style: Theme.of(context)
               .textTheme
               .bodyMedium
-              ?.copyWith(color: Colors.black54),
+              ?.copyWith(color: const Color(0xFF94A3B8)),
         ),
       ],
     );
   }
 }
-

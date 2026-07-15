@@ -11,15 +11,22 @@ import '../screens/profile_screen.dart';
 import '../screens/notifications_screen.dart';
 
 class BuyerNavigationShell extends StatefulWidget {
+  static final GlobalKey<BuyerNavigationShellState> navKey = GlobalKey<BuyerNavigationShellState>();
+
   const BuyerNavigationShell({super.key});
 
-
   @override
-  State<BuyerNavigationShell> createState() => _BuyerNavigationShellState();
+  State<BuyerNavigationShell> createState() => BuyerNavigationShellState();
 }
 
-class _BuyerNavigationShellState extends State<BuyerNavigationShell> {
+class BuyerNavigationShellState extends State<BuyerNavigationShell> {
   int _currentIndex = 0;
+
+  void setSelectedIndex(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,11 +42,8 @@ class _BuyerNavigationShellState extends State<BuyerNavigationShell> {
       ProfileScreen(userId: userId),
     ];
 
-
     void onItemTapped(int index) {
-      setState(() {
-        _currentIndex = index;
-      });
+      setSelectedIndex(index);
     }
 
     return Scaffold(

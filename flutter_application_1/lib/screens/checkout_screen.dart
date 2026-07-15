@@ -461,8 +461,9 @@ class _CartItemTile extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(color: const Color(0xFF334155)),
         borderRadius: BorderRadius.circular(12),
+        color: const Color(0xFF1E293B),
       ),
       child: Row(
         children: [
@@ -477,11 +478,11 @@ class _CartItemTile extends StatelessWidget {
                       item.imageUrl,
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) =>
-                          const Icon(Icons.image_not_supported, size: 40),
+                          const Icon(Icons.image_not_supported, size: 40, color: Color(0xFF94A3B8)),
                     )
                   : Container(
-                      color: Colors.grey.shade200,
-                      child: const Icon(Icons.image_not_supported, size: 40),
+                      color: const Color(0xFF0F172A),
+                      child: const Icon(Icons.image_not_supported, size: 40, color: Color(0xFF94A3B8)),
                     ),
             ),
           ),
@@ -498,14 +499,15 @@ class _CartItemTile extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
+                    color: Color(0xFFF8FAFC),
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'Game: ${item.game}',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 12,
-                    color: Colors.grey.shade600,
+                    color: Color(0xFF94A3B8),
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -575,7 +577,7 @@ class _OrderSummarySection extends StatelessWidget {
           // Items count
           Text(
             '${items.length} item${items.length > 1 ? 's' : ''}',
-            style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+            style: const TextStyle(fontSize: 14, color: Color(0xFF94A3B8)),
           ),
           const SizedBox(height: 8),
           _summaryRow('Subtotal:', _vnd.format(subtotal)),

@@ -60,7 +60,8 @@ class GameAcctHubApp extends StatelessWidget {
       ],
       child: MaterialApp(
         title: 'GameAcctHub',
-        theme: AppTheme.lightTheme,
+        theme: AppTheme.darkTheme,
+        themeMode: ThemeMode.dark,
         debugShowCheckedModeBanner: false,
         home: Consumer<AuthProvider>(
           builder: (context, auth, _) {
@@ -98,11 +99,11 @@ class GameAcctHubApp extends StatelessWidget {
                       return const AdminDashboardScreen();
 
                     case UserRole.seller:
-                      return const SellerNavigationShell();
+                      return SellerNavigationShell(key: SellerNavigationShell.navKey);
 
                     case UserRole.buyer:
                     default:
-                      return const BuyerNavigationShell();
+                      return BuyerNavigationShell(key: BuyerNavigationShell.navKey);
                   }
                 }
 
