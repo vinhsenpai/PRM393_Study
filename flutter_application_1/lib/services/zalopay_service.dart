@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:crypto/crypto.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 
 /// Result of creating an order on the ZaloPay sandbox gateway.
@@ -50,6 +51,13 @@ class ZaloPayService {
   static const String _createEndpoint = 'https://sb-openapi.zalopay.vn/v2/create';
   static const String _queryEndpoint = 'https://sb-openapi.zalopay.vn/v2/query';
 
+  String _getEndpoint(String url) {
+    if (kIsWeb) {
+      return 'https://corsproxy.io/?$url';
+    }
+    return url;
+  }
+
   /// Product prices are already in VND. ZaloPay requires the amount as an
   /// integer number of VND (min 1,000).
   static int toVndAmount(double amount) {
@@ -91,7 +99,7 @@ class ZaloPayService {
     final mac = _hmacSha256(_key1, macData);
 
     final response = await http.post(
-      Uri.parse(_createEndpoint),
+      Uri.parse(_getEndpoint(_createEndpoint)),
       body: {
         'app_id': appId,
         'app_user': appUser,
@@ -132,7 +140,7 @@ class ZaloPayService {
     final mac = _hmacSha256(_key1, '$appId|$appTransId|$_key1');
 
     final response = await http.post(
-      Uri.parse(_queryEndpoint),
+      Uri.parse(_getEndpoint(_queryEndpoint)),
       body: {
         'app_id': appId,
         'app_trans_id': appTransId,

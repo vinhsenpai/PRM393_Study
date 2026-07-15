@@ -9,6 +9,7 @@ import '../models/cart_item.dart';
 import '../providers/cart_provider.dart';
 import '../services/order_service.dart';
 import '../services/zalopay_service.dart';
+import '../providers/auth_provider.dart';
 import '../theme/app_theme.dart';
 import 'order_success_screen.dart';
 
@@ -87,11 +88,15 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             })
         .toList();
 
+    final user = context.read<AuthProvider>().currentUser;
+    final appUser = user?.id ?? 'demo_user';
+
     // 1. Create the order on the ZaloPay sandbox gateway
     final zpOrder = await zaloPayService.createOrder(
       amountVnd: amountVnd,
       description: 'Marketplace order - ${cartProvider.items.length} item(s)',
       items: zpItems,
+      appUser: appUser,
     );
 
     // 2. Open the ZaloPay payment page / sandbox app
@@ -344,6 +349,9 @@ class _ZaloPayWaitingDialogState extends State<_ZaloPayWaitingDialog> {
 class _BuyerInformationSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+    final user = auth.currentUser;
+
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -357,21 +365,14 @@ class _BuyerInformationSection extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          // In a real app, we would get user details from auth or profile
-          // For now, we'll show placeholder information
-          const Text(
-            'Name: John Doe',
-            style: TextStyle(fontSize: 16),
+          Text(
+            'Name: ${user?.name ?? "Guest"}',
+            style: const TextStyle(fontSize: 16),
           ),
           const SizedBox(height: 6),
-          const Text(
-            'Email: john.doe@example.com',
-            style: TextStyle(fontSize: 16),
-          ),
-          const SizedBox(height: 6),
-          const Text(
-            'Phone: +1 (555) 123-4567',
-            style: TextStyle(fontSize: 16),
+          Text(
+            'Email: ${user?.email ?? "N/A"}',
+            style: const TextStyle(fontSize: 16),
           ),
         ],
       ),
