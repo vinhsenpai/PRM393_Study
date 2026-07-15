@@ -210,6 +210,7 @@ onPressed: isAvailable
                       final cartProvider = context.read<CartProvider>();
 final mappedProduct = mapGameAccountToProduct(account);
                       await cartProvider.addToCart(mappedProduct);
+                      if (!context.mounted) return;
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Added to cart')),
                       );

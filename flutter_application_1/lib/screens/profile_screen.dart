@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 
 import '../providers/auth_provider.dart';
 import '../screens/edit_profile_screen.dart';
-import '../models/user.dart';
 
 
 class ProfileScreen extends StatelessWidget {
@@ -44,7 +43,7 @@ class ProfileScreen extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.person),
             title: Text(
-              user.name.isNotEmpty ?? false ? user.name : 'No name set',
+              user.name.isNotEmpty ? user.name : 'No name set',
               style: const TextStyle(fontSize: 18),
             ),
           ),

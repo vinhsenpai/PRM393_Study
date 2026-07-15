@@ -3,7 +3,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/auth_provider.dart';
-import '../models/user.dart';
 
 class SellerProfileScreen extends StatelessWidget {
   const SellerProfileScreen({super.key});
@@ -64,7 +63,7 @@ class SellerProfileScreen extends StatelessWidget {
                   ListTile(
                     leading: const Icon(Icons.store),
                     title: Text(
-                      user.name.isNotEmpty ?? false ? user.name : 'No name set',
+                      user.name.isNotEmpty ? user.name : 'No name set',
                       style: const TextStyle(fontSize: 18),
                     ),
                   ),

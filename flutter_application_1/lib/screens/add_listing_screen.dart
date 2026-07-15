@@ -72,6 +72,7 @@ class _AddListingScreenState extends State<AddListingScreen> {
                     if (_formKey.currentState!.validate()) {
                       _formKey.currentState!.save();
                       // Logic to add listing
+                      debugPrint('Submitted listing: $_title, $_gameName, $_price, $_description');
                       Navigator.pop(context);
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(

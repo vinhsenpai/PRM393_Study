@@ -6,7 +6,6 @@ import '../models/product.dart';
 import '../providers/auth_provider.dart';
 import '../providers/cart_provider.dart';
 import '../screens/chat_screen.dart';
-import '../screens/product_detail_screen_redesigned.dart';
 import '../theme/app_theme.dart';
 
 class ProductDetailScreen extends StatelessWidget {
@@ -105,7 +104,7 @@ class ProductDetailScreen extends StatelessWidget {
                 ),
                 onPressed: () async {
                   await cart.addToCart(product);
-
+                  if (!context.mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Đã thêm vào giỏ hàng')),
                   );

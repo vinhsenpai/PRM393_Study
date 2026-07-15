@@ -87,11 +87,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       decoration: BoxDecoration(
-        color: item.isRead ? Colors.white : Colors.blue.withOpacity(0.03),
+        color: item.isRead ? Colors.white : Colors.blue.withValues(alpha: 0.03),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color:
-              item.isRead ? Colors.grey[200]! : Colors.blue.withOpacity(0.1),
+              item.isRead ? Colors.grey[200]! : Colors.blue.withValues(alpha: 0.1),
         ),
       ),
       child: ListTile(
@@ -100,7 +100,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         leading: Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: icon.color.withOpacity(0.1),
+            color: icon.color.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
           child: Icon(icon.data, color: icon.color, size: 24),
@@ -136,7 +136,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             userId: userId,
           );
 
-          if (!mounted) return;
+          if (!context.mounted) return;
           await _navigateFromNotification(context, item);
         },
       ),
@@ -167,7 +167,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       final productId = item.payload['productId']?.toString();
       final productTitle = item.payload['productTitle']?.toString() ?? '';
 
-      if ([buyerId, sellerId, productId].any((e) => e == null || e!.isEmpty)) {
+      if ([buyerId, sellerId, productId].any((e) => e == null || e.isEmpty)) {
         return;
       }
 
@@ -196,7 +196,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       case NotificationType.message:
         return (data: Icons.chat_bubble_outline_rounded, color: Colors.blue);
       case NotificationType.system:
-      default:
         return (data: Icons.info_rounded, color: Colors.orange);
     }
   }

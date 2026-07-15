@@ -174,8 +174,8 @@ class SellerAnalyticsScreen extends StatelessWidget {
                         // Convert to list of FlSpot for the chart
                         List<FlSpot> spots = [];
                         int i = 0;
-                        monthlyOrders.forEach((month, count) {
-                          spots.add(FlSpot(i.toDouble(), count.toDouble()));
+                        monthlyOrders.forEach((month, orderCount) {
+                          spots.add(FlSpot(i.toDouble(), orderCount.toDouble()));
                           i++;
                         });
 

@@ -185,16 +185,18 @@ class _ProductCatalogBodyState extends State<_ProductCatalogBody> {
                               final isNowFavorite = !doc.exists;
 
                               if (isNowFavorite) {
-                                await favoriteDoc.set({});
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
+                                 await favoriteDoc.set({});
+                                 if (!context.mounted) return;
+                                 ScaffoldMessenger.of(context).showSnackBar(
+                                   const SnackBar(
                                     content: Text('Đã thêm vào danh sách Favorites'),
                                   ),
                                 );
                               } else {
-                                await favoriteDoc.delete();
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
+                                 await favoriteDoc.delete();
+                                 if (!context.mounted) return;
+                                 ScaffoldMessenger.of(context).showSnackBar(
+                                   const SnackBar(
                                     content: Text('Đã gỡ khỏi danh sách Favorites'),
                                   ),
                                 );

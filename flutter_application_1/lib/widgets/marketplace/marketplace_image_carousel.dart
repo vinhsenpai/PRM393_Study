@@ -1,8 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
-import '../../models/product.dart';
-
 class MarketplaceImageCarousel extends StatefulWidget {
   final List<String> imageUrls;
   final double height;

@@ -80,7 +80,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
       await auth.firestore.collection('users').doc(widget.userId).update({
         'name': name,
-        if (photoUrl != null) 'photoUrl': photoUrl,
+        'photoUrl': ?photoUrl,
         'updatedAt': FieldValue.serverTimestamp(),
       });
 

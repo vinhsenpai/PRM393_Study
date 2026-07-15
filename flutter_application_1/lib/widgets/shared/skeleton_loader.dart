@@ -17,8 +17,6 @@ class SkeletonLoader extends StatelessWidget {
         return _buildOrdersListSkeleton();
       case SkeletonLoaderType.orderDetail:
         return _buildOrderDetailSkeleton();
-      default:
-        return const Center(child: CircularProgressIndicator());
     }
   }
 

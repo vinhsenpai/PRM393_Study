@@ -259,6 +259,7 @@ class _ProductDetailScreenRedesignedState
                 }
 
                 await cart.addToCart(_product);
+                if (!context.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Added to cart.')),
                 );
@@ -274,6 +275,7 @@ class _ProductDetailScreenRedesignedState
                 }
 
                 await cart.addToCart(_product);
+                if (!context.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Added to cart.')),
                 );

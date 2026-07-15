@@ -135,7 +135,7 @@ class _SellerOrderDetailScreenState extends State<SellerOrderDetailScreen> {
                 _buildDetailRow('Created Date',
                     '${order.createdAt.toDate().day} ${_getMonthName(order.createdAt.toDate().month)} ${order.createdAt.toDate().year}'),
                 _buildDetailRow('Updated Date',
-                    '${order.updatedAt.toDate().day ?? order.createdAt.toDate().day} ${_getMonthName(order.updatedAt.toDate().month ?? order.createdAt.toDate().month)} ${order.updatedAt.toDate().year ?? order.createdAt.toDate().year}'),
+                    '${order.updatedAt.toDate().day} ${_getMonthName(order.updatedAt.toDate().month)} ${order.updatedAt.toDate().year}'),
               ],
             ),
           ),
@@ -213,7 +213,7 @@ class _SellerOrderDetailScreenState extends State<SellerOrderDetailScreen> {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.1),
+                      color: statusColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(

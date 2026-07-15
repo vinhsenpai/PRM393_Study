@@ -16,7 +16,6 @@ class BuyerHomeScreen extends StatefulWidget {
 
 class _BuyerHomeScreenState extends State<BuyerHomeScreen> {
   String _searchQuery = '';
-  String _selectedCategory = 'all';
 
   @override
   Widget build(BuildContext context) {
@@ -207,7 +206,7 @@ class _CategoryChip extends StatelessWidget {
       onSelected: (_) {
         // TODO: Implement category filtering
       },
-      selectedColor: colorScheme.primary.withOpacity(0.2),
+      selectedColor: colorScheme.primary.withValues(alpha: 0.2),
       checkmarkColor: colorScheme.primary,
       backgroundColor: colorScheme.surfaceContainerHighest,
       labelStyle: TextStyle(

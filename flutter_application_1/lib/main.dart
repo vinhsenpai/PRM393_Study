@@ -9,7 +9,6 @@ import 'theme/app_theme.dart';
 import 'providers/account_provider.dart';
 import 'providers/cart_provider.dart';
 
-import 'models/cart_item.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 import 'hive/cart_item_adapter.dart';
@@ -38,12 +37,12 @@ void main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   // Khởi tạo Firebase Storage rõ ràng
-  try {
-    final storage = FirebaseStorage.instance;
-    print('Firebase Storage initialized: ${storage.bucket}');
-  } catch (e) {
-    print('Error initializing Firebase Storage: $e');
-  }
+    try {
+      final storage = FirebaseStorage.instance;
+      debugPrint('Firebase Storage initialized: ${storage.bucket}');
+    } catch (e) {
+      debugPrint('Error initializing Firebase Storage: $e');
+    }
 
   runApp(const GameAcctHubApp());
 }

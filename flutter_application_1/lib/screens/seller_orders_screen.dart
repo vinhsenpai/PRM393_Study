@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:provider/provider.dart';
 
 import '../models/order.dart';
 import '../services/order_service.dart';
@@ -24,7 +23,6 @@ class _SellerOrdersScreenState extends State<SellerOrdersScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   String _selectedFilter = 'All'; // All, Pending, Processing, Completed, Cancelled
-  final bool _isSearching = false;
 
   @override
   void dispose() {
@@ -83,7 +81,7 @@ class _SellerOrdersScreenState extends State<SellerOrdersScreen> {
           final completedCount = orders.where((o) => o.status == 'completed').length;
           final revenue = orders
               .where((o) => o.status == 'completed')
-              .fold(0.0, (sum, order) => sum + order.totalAmount);
+              .fold(0.0, (currentSum, order) => currentSum + order.totalAmount);
 
           // Build summary cards
           final List<Widget> summaryCards = [
