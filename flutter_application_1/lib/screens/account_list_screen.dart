@@ -136,9 +136,12 @@ class AccountListScreen extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(12.0),
       child: TextField(
+        style: const TextStyle(color: Color(0xFF0F172A)),
+        cursorColor: Theme.of(context).primaryColor,
         decoration: InputDecoration(
           hintText: 'Search for accounts or games...',
-          prefixIcon: const Icon(Icons.search),
+          hintStyle: TextStyle(color: Colors.grey.shade600),
+          prefixIcon: Icon(Icons.search, color: Colors.grey.shade600),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           filled: true,
           fillColor: Colors.white,

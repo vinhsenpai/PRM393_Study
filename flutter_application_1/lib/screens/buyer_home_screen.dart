@@ -222,16 +222,16 @@ class _CategoryChip extends StatelessWidget {
         // TODO: Implement category filtering
       },
       selectedColor: colorScheme.primary.withValues(alpha: 0.2),
-      checkmarkColor: colorScheme.primary,
+      checkmarkColor: Colors.white,
       backgroundColor: colorScheme.surfaceContainerHighest,
       labelStyle: TextStyle(
-        color: isSelected ? colorScheme.primary : colorScheme.onSurfaceVariant,
+        color: isSelected ? Colors.white : colorScheme.onSurfaceVariant,
       ),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
-side: BorderSide(
-          color: colorScheme.outlineVariant,
+        side: BorderSide(
+          color: isSelected ? colorScheme.primary : colorScheme.outlineVariant,
         ),
       ),
     );

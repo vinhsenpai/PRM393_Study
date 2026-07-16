@@ -188,8 +188,11 @@ class _ChatScreenState extends State<ChatScreen> {
           Expanded(
             child: TextField(
               controller: _messageController,
+              style: const TextStyle(color: Colors.black87),
+              cursorColor: AppTheme.primaryColor,
               decoration: InputDecoration(
                 hintText: 'Type a message...',
+                hintStyle: TextStyle(color: Colors.grey.shade600),
                 border: InputBorder.none,
               ),
               onSubmitted: (value) => _sendMessage(),

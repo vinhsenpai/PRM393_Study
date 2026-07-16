@@ -35,9 +35,12 @@ class _BuyerMessagesScreenState extends State<BuyerMessagesScreen> {
                   _searchQuery = value;
                 });
               },
+              style: const TextStyle(color: Color(0xFF0F172A)),
+              cursorColor: AppTheme.primaryColor,
               decoration: InputDecoration(
                 hintText: 'Search chats...',
-                prefixIcon: const Icon(Icons.search),
+                hintStyle: TextStyle(color: Colors.grey.shade600),
+                prefixIcon: Icon(Icons.search, color: Colors.grey.shade600),
                 filled: true,
                 fillColor: Colors.white,
                 border: OutlineInputBorder(

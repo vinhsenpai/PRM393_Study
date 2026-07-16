@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../theme/app_theme.dart';
 import 'order_detail_section.dart';
 
 class BillingSection extends StatelessWidget {
@@ -64,7 +65,9 @@ class BillingSection extends StatelessWidget {
             style: TextStyle(
               fontSize: 14,
               fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
-              color: isTotal ? Colors.black87 : Colors.grey.shade600,
+              color: isTotal
+                  ? AppTheme.textPrimary
+                  : AppTheme.textSecondary,
             ),
           ),
           Text(
@@ -72,7 +75,9 @@ class BillingSection extends StatelessWidget {
             style: TextStyle(
               fontSize: 14,
               fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
-              color: isTotal ? Colors.black87 : Colors.grey.shade600,
+              color: isTotal
+                  ? AppTheme.textPrimary
+                  : AppTheme.textSecondary,
             ),
           ),
         ],

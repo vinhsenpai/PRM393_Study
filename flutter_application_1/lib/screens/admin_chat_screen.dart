@@ -213,8 +213,11 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
                 ),
                 child: TextField(
                   controller: _messageController,
-                  decoration: const InputDecoration(
+                  style: const TextStyle(color: Colors.black87),
+                  cursorColor: Theme.of(context).primaryColor,
+                  decoration: InputDecoration(
                     hintText: 'Type a message...',
+                    hintStyle: TextStyle(color: Colors.grey.shade600),
                     border: InputBorder.none,
                   ),
                 ),

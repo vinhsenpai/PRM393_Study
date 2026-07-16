@@ -33,9 +33,12 @@ class SearchFilterBar extends StatelessWidget {
           // Search Bar
           TextField(
             controller: searchController,
+            style: const TextStyle(color: Color(0xFF0F172A)),
+            cursorColor: Theme.of(context).primaryColor,
             decoration: InputDecoration(
               hintText: 'Search orders...',
-              prefixIcon: const Icon(Icons.search),
+              hintStyle: TextStyle(color: Colors.grey.shade600),
+              prefixIcon: Icon(Icons.search, color: Colors.grey.shade600),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide.none,
@@ -79,13 +82,13 @@ class SearchFilterBar extends StatelessWidget {
       },
       selectedColor: Theme.of(context).primaryColor.withValues(alpha: 0.2),
       labelStyle: TextStyle(
-        color: isSelected ? Theme.of(context).primaryColor : Colors.grey.shade700,
+        color: isSelected ? Colors.white : const Color(0xFF94A3B8),
       ),
       showCheckmark: false,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
         side: BorderSide(
-          color: isSelected ? Theme.of(context).primaryColor : Colors.grey.shade300,
+          color: isSelected ? Theme.of(context).primaryColor : const Color(0xFF334155),
         ),
       ),
     );

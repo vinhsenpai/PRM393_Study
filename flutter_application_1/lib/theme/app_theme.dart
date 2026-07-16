@@ -25,8 +25,29 @@ class AppTheme {
         onPrimary: Colors.white,
         onSecondary: Colors.white,
         onSurface: textPrimary,
+        onSurfaceVariant: textSecondary,
+        outlineVariant: borderColor,
+        surfaceContainerHighest: Color(0xFF273549),
       ),
       scaffoldBackgroundColor: backgroundColor,
+      splashColor: primaryColor.withValues(alpha: 0.12),
+      highlightColor: primaryColor.withValues(alpha: 0.08),
+      focusColor: primaryColor.withValues(alpha: 0.12),
+      hoverColor: primaryColor.withValues(alpha: 0.04),
+      textSelectionTheme: const TextSelectionThemeData(
+        cursorColor: primaryColor,
+        selectionColor: Color(0x666366F1), // Indigo with 40% opacity
+        selectionHandleColor: primaryColor,
+      ),
+      chipTheme: ChipThemeData(
+        backgroundColor: surfaceColor,
+        selectedColor: primaryColor.withValues(alpha: 0.2),
+        checkmarkColor: Colors.white,
+        labelStyle: const TextStyle(color: textSecondary, fontSize: 13),
+        secondaryLabelStyle: const TextStyle(color: textPrimary, fontSize: 13),
+        side: const BorderSide(color: borderColor),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      ),
       textTheme: GoogleFonts.poppinsTextTheme(
         ThemeData.dark().textTheme,
       ).apply(

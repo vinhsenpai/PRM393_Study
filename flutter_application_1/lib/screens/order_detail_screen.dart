@@ -486,7 +486,9 @@ class _SummaryRow extends StatelessWidget {
             label,
             style: TextStyle(
               fontSize: 16,
-              color: isTotal ? Colors.black87 : Colors.grey.shade600,
+              color: isTotal
+                  ? Theme.of(context).colorScheme.onSurface
+                  : Theme.of(context).colorScheme.onSurfaceVariant,
               fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
             ),
           ),
@@ -495,7 +497,7 @@ class _SummaryRow extends StatelessWidget {
             style: TextStyle(
               fontSize: 16,
               fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
-              color: isTotal ? AppTheme.primaryColor : Colors.black87,
+              color: isTotal ? AppTheme.primaryColor : Theme.of(context).colorScheme.onSurface,
             ),
           ),
         ],

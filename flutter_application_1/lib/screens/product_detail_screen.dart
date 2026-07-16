@@ -70,7 +70,7 @@ class ProductDetailScreen extends StatelessWidget {
           Text(
             product.description,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.black87,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
           ),
           const SizedBox(height: 20),
