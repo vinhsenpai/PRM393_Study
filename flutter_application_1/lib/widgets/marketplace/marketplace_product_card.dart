@@ -97,22 +97,22 @@ class MarketplaceProductCard extends StatelessWidget {
                       left: 8,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 6,
+                          horizontal: 6,
+                          vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: statusColor.withValues(alpha: 0.12),
+                          color: const Color(0xFF1E293B).withValues(alpha: 0.85),
                           border: Border.all(
-                            color: statusColor.withValues(alpha: 0.3),
-                            width: 0.9,
+                            color: statusColor.withValues(alpha: 0.5),
+                            width: 0.8,
                           ),
-                          borderRadius: BorderRadius.circular(999),
+                          borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
                           _statusText(product.stockStatus),
                           style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w800,
+                            fontSize: 8,
+                            fontWeight: FontWeight.bold,
                             color: statusColor,
                           ),
                         ),
