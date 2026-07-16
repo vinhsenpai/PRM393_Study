@@ -119,7 +119,7 @@ class _SellerOrdersScreenState extends State<SellerOrdersScreen> {
                 sliver: SliverGrid(
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
-                    childAspectRatio: 1.5,
+                    childAspectRatio: 1.35,
                     mainAxisSpacing: 12,
                     crossAxisSpacing: 12,
                   ),
