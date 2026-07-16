@@ -142,7 +142,7 @@ class _ProductCatalogBodyState extends State<_ProductCatalogBody> {
                       gridDelegate:
                           const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
-                        childAspectRatio: 0.66,
+                        childAspectRatio: 0.58,
                         crossAxisSpacing: 14,
                         mainAxisSpacing: 14,
                       ),
@@ -226,7 +226,7 @@ class _ProductCatalogBodyState extends State<_ProductCatalogBody> {
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 18),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        childAspectRatio: 0.66,
+        childAspectRatio: 0.58,
         crossAxisSpacing: 14,
         mainAxisSpacing: 14,
       ),

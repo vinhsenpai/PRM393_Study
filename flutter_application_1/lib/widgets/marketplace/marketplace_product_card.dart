@@ -153,7 +153,7 @@ class MarketplaceProductCard extends StatelessWidget {
 
             // Body
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -163,29 +163,29 @@ class MarketplaceProductCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontWeight: FontWeight.w900,
-                      fontSize: 15,
+                      fontSize: 14,
                       color: Color(0xFFF8FAFC),
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 3),
                   Text(
                     product.game,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      fontSize: 12,
+                      fontSize: 11,
                       color: Color(0xFF94A3B8),
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 6),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
                         '${product.price.toStringAsFixed(0)} đ',
                         style: const TextStyle(
-                          fontSize: 16,
+                          fontSize: 15,
                           fontWeight: FontWeight.w900,
                           color: Color(0xFFF59E0B),
                         ),
@@ -193,7 +193,7 @@ class MarketplaceProductCard extends StatelessWidget {
                       if (product.tags.isNotEmpty)
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 4),
+                              horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
                             color: AppTheme.primaryColor.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(999),
@@ -206,7 +206,7 @@ class MarketplaceProductCard extends StatelessWidget {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
-                              fontSize: 10,
+                              fontSize: 9,
                               fontWeight: FontWeight.w800,
                               color: AppTheme.primaryColor,
                             ),
