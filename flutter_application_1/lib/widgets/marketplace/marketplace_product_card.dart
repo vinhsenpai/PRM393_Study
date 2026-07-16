@@ -75,7 +75,7 @@ class MarketplaceProductCard extends StatelessWidget {
           children: [
             // Image section with reduced height (1:1 aspect ratio)
             AspectRatio(
-              aspectRatio: 1 / 1,
+              aspectRatio: 1 / 1.2,
               child: ClipRRect(
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
                 child: Stack(
