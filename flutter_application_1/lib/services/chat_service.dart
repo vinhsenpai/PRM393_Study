@@ -67,7 +67,7 @@ class ChatService {
       'updatedAt': FieldValue.serverTimestamp(),
     });
 
-    // Create notification for the other participant
+    // Create notification and send push notification for the other participant
     try {
       final chatSnapshot = await chatDoc.get();
       if (!chatSnapshot.exists) return;
@@ -84,6 +84,8 @@ class ChatService {
       if (receiverId.isEmpty) return;
 
       final notificationService = NotificationService();
+      
+      // Create local/in-app notification entry in Firestore
       await notificationService.createNotification(
         receiverId: receiverId,
         type: NotificationType.message,
@@ -99,6 +101,29 @@ class ChatService {
           'chatId': chatId,
         },
       );
+
+      // Fetch recipient's FCM token from Firestore
+      final recipientDoc = await _firestore.collection('users').doc(receiverId).get();
+      if (recipientDoc.exists) {
+        final recipientToken = recipientDoc.data()?['fcmToken']?.toString() ?? '';
+        if (recipientToken.isNotEmpty) {
+          final senderName = senderRole == 'buyer' ? buyerName : sellerName;
+          await notificationService.sendPushNotification(
+            recipientToken: recipientToken,
+            title: 'New message from $senderName',
+            body: text.trim(),
+            payload: {
+              'buyerId': buyerId,
+              'buyerName': buyerName,
+              'sellerId': sellerId,
+              'sellerName': sellerName,
+              'productId': productId,
+              'productTitle': productTitle,
+              'chatId': chatId,
+            },
+          );
+        }
+      }
     } catch (_) {
       // ignore notification failures
     }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 import 'firebase_options.dart';
 
@@ -20,8 +21,12 @@ import 'navigation/buyer_navigation_shell.dart';
 import 'navigation/seller_navigation_shell.dart';
 import 'screens/admin_dashboard_screen.dart';
 import 'screens/email_verification_required_screen.dart';
+import 'services/notification_service.dart';
 
 import 'models/user.dart';
+
+// Global navigation key for navigating from FCM notification clicks without context
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,13 +41,24 @@ void main() async {
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
+  // Set the background messaging handler early on, as a top-level function
+  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+
   // Khởi tạo Firebase Storage rõ ràng
-    try {
-      final storage = FirebaseStorage.instance;
-      debugPrint('Firebase Storage initialized: ${storage.bucket}');
-    } catch (e) {
-      debugPrint('Error initializing Firebase Storage: $e');
-    }
+  try {
+    final storage = FirebaseStorage.instance;
+    debugPrint('Firebase Storage initialized: ${storage.bucket}');
+  } catch (e) {
+    debugPrint('Error initializing Firebase Storage: $e');
+  }
+
+  // Initialize notification service and request permission
+  try {
+    await NotificationService().initNotifications();
+    debugPrint('Notification Service initialized successfully');
+  } catch (e) {
+    debugPrint('Error initializing Notification Service: $e');
+  }
 
   runApp(const GameAcctHubApp());
 }
@@ -59,6 +75,7 @@ class GameAcctHubApp extends StatelessWidget {
         ChangeNotifierProvider(create: (context) => CartProvider()..loadCart()),
       ],
       child: MaterialApp(
+        navigatorKey: navigatorKey,
         title: 'GameAcctHub',
         theme: AppTheme.darkTheme,
         themeMode: ThemeMode.dark,

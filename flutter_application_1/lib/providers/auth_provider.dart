@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
-
 import '../models/user.dart';
 import '../services/auth_service.dart';
-
+import '../services/notification_service.dart';
 
 class AuthProvider with ChangeNotifier {
-  AuthProvider({AuthService? authService}) : _authService = authService ?? AuthService();
+  AuthProvider({AuthService? authService}) : _authService = authService ?? AuthService() {
+    _initUser();
+  }
 
   final AuthService _authService;
 
@@ -18,8 +18,22 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
   }
 
-
-
+  Future<void> _initUser() async {
+    try {
+      final fbUser = _authService.getCurrentUser();
+      if (fbUser != null) {
+        final uid = fbUser.uid;
+        final doc = await _authService.firestore.collection('users').doc(uid).get();
+        if (doc.exists && doc.data() != null) {
+          _currentUser = User.fromDocument(uid, doc.data()!);
+          await NotificationService().saveFcmToken(uid);
+          notifyListeners();
+        }
+      }
+    } catch (e) {
+      debugPrint('Error initializing user: $e');
+    }
+  }
 
   User? _currentUser;
 
@@ -67,13 +81,14 @@ class AuthProvider with ChangeNotifier {
           updatedAt: DateTime.now(),
         );
       }
+      await NotificationService().saveFcmToken(uid);
       notifyListeners();
     } catch (e) {
       rethrow;
     }
   }
 
-    Future<void> register(String name, String email, String password, UserRole role) async {
+  Future<void> register(String name, String email, String password, UserRole role) async {
      try {
        final userCredential = await _authService.signUpWithEmailPassword(email, password);
        await _authService.createOrUpdateUserInFirestore(
@@ -106,11 +121,12 @@ class AuthProvider with ChangeNotifier {
            updatedAt: DateTime.now(),
          );
        }
+       await NotificationService().saveFcmToken(uid);
        notifyListeners();
      } catch (e) {
        rethrow;
      }
-   }
+  }
 
   /// Sends email verification to the current user.
   Future<void> sendEmailVerification() async {
@@ -182,6 +198,7 @@ class AuthProvider with ChangeNotifier {
           updatedAt: DateTime.now(),
         );
       }
+      await NotificationService().saveFcmToken(uid);
       notifyListeners();
     } catch (e) {
       rethrow;
@@ -189,6 +206,13 @@ class AuthProvider with ChangeNotifier {
   }
 
   Future<void> logout() async {
+    if (_currentUser != null) {
+      try {
+        await NotificationService().deleteFcmToken(_currentUser!.id);
+      } catch (e) {
+        debugPrint('Error deleting FCM Token on logout: $e');
+      }
+    }
     await _authService.signOut();
     _currentUser = null;
     notifyListeners();
