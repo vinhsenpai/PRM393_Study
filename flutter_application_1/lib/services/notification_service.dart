@@ -2,8 +2,9 @@ import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:http/http.dart' as http;
+import 'package:googleapis_auth/auth_io.dart';
 import '../models/notification_item.dart';
 import '../screens/chat_screen.dart';
 import '../main.dart' show navigatorKey;
@@ -20,9 +21,6 @@ class NotificationService {
   final FlutterLocalNotificationsPlugin _localNotifications =
       FlutterLocalNotificationsPlugin();
 
-  // The Legacy Server Key. User can paste their actual Server Key here
-  static const String fcmServerKey = 'YOUR_FCM_SERVER_KEY';
-
   static final NotificationService _instance = NotificationService._internal();
 
   factory NotificationService() {
@@ -33,6 +31,20 @@ class NotificationService {
 
   CollectionReference<Map<String, dynamic>> get _notificationsCollection =>
       _firestore.collection('notifications');
+
+  // Obtain authenticated client via Service Account JSON file loaded from assets
+  Future<AuthClient> _getAuthenticatedClient() async {
+    try {
+      final String jsonString = await rootBundle.loadString('assets/service_account.json');
+      final Map<String, dynamic> serviceAccount = jsonDecode(jsonString) as Map<String, dynamic>;
+      final credentials = ServiceAccountCredentials.fromJson(serviceAccount);
+      final scopes = ['https://www.googleapis.com/auth/firebase.messaging'];
+      return await clientViaServiceAccount(credentials, scopes);
+    } catch (e) {
+      debugPrint('Error loading service account credentials: $e');
+      rethrow;
+    }
+  }
 
   // Initialize notifications: request permissions and setup listeners
   Future<void> initNotifications() async {
@@ -188,7 +200,7 @@ class NotificationService {
     }
   }
 
-  // Send Push Notification from client side via FCM legacy HTTP API
+  // Send Push Notification from client side via FCM API V1 (OAuth2 AuthClient)
   Future<void> sendPushNotification({
     required String recipientToken,
     required String title,
@@ -200,41 +212,46 @@ class NotificationService {
       return;
     }
 
-    if (fcmServerKey == 'YOUR_FCM_SERVER_KEY' || fcmServerKey.isEmpty) {
-      debugPrint('Warning: FCM Server Key is not configured yet.');
-      return;
-    }
-
     try {
-      final response = await http.post(
-        Uri.parse('https://fcm.googleapis.com/fcm/send'),
+      final client = await _getAuthenticatedClient();
+
+      // FCM V1 requires payload data values to be strings
+      final Map<String, String> stringPayload = {};
+      payload.forEach((key, value) {
+        stringPayload[key] = value.toString();
+      });
+
+      final response = await client.post(
+        Uri.parse('https://fcm.googleapis.com/v1/projects/prm001-bf36b/messages:send'),
         headers: <String, String>{
           'Content-Type': 'application/json',
-          'Authorization': 'key=$fcmServerKey',
         },
         body: jsonEncode(<String, dynamic>{
-          'to': recipientToken,
-          'priority': 'high',
-          'notification': <String, dynamic>{
-            'title': title,
-            'body': body,
-            'android_channel_id': 'messages_channel',
-          },
-          'data': <String, dynamic>{
-            'click_action': 'FLUTTER_NOTIFICATION_CLICK',
-            'type': 'message',
-            ...payload,
-          },
+          'message': <String, dynamic>{
+            'token': recipientToken,
+            'notification': <String, dynamic>{
+              'title': title,
+              'body': body,
+            },
+            'android': <String, dynamic>{
+              'notification': <String, dynamic>{
+                'channel_id': 'messages_channel',
+              },
+            },
+            'data': stringPayload,
+          }
         }),
       );
 
+      client.close();
+
       if (response.statusCode == 200) {
-        debugPrint('FCM push notification sent successfully');
+        debugPrint('FCM V1 push notification sent successfully');
       } else {
-        debugPrint('FCM push notification failed with status: ${response.statusCode}, response: ${response.body}');
+        debugPrint('FCM V1 push notification failed with status: ${response.statusCode}, response: ${response.body}');
       }
     } catch (e) {
-      debugPrint('Error sending FCM push notification: $e');
+      debugPrint('Error sending FCM V1 push notification: $e');
     }
   }
 
