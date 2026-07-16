@@ -59,10 +59,15 @@ class AppTheme {
             return const TextStyle(
               color: textPrimary,
               fontWeight: FontWeight.w600,
-              fontSize: 12,
+              fontSize: 10.5,
+              letterSpacing: -0.2,
             );
           }
-          return const TextStyle(color: textSecondary, fontSize: 12);
+          return const TextStyle(
+            color: textSecondary, 
+            fontSize: 10,
+            letterSpacing: -0.2,
+          );
         }),
         iconTheme: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {

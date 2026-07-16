@@ -214,8 +214,12 @@ class AccountDetailScreen extends StatelessWidget {
                 final buyerId = auth.currentUser?.id ?? '';
 
                 if (buyerId.isEmpty) {
+                  ScaffoldMessenger.of(context).hideCurrentSnackBar();
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Please login to contact the seller.')),
+                    const SnackBar(
+                      content: Text('Please login to contact the seller.'),
+                      duration: Duration(seconds: 2),
+                    ),
                   );
                   return;
                 }
@@ -264,9 +268,11 @@ class AccountDetailScreen extends StatelessWidget {
                     await cartProvider.addToCart(mappedProduct);
                     if (!context.mounted) return;
 
+                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         backgroundColor: const Color(0xFF1E293B),
+                        duration: const Duration(seconds: 2),
                         content: const Text(
                           'Product added to cart!',
                           style: TextStyle(color: Color(0xFFF8FAFC)),
@@ -280,8 +286,12 @@ class AccountDetailScreen extends StatelessWidget {
                           label: 'VIEW CART',
                           textColor: const Color(0xFF6366F1),
                           onPressed: () {
-                            Navigator.popUntil(context, (route) => route.isFirst);
-                            BuyerNavigationShell.navKey.currentState?.setSelectedIndex(1);
+                            final shellContext = BuyerNavigationShell.navKey.currentContext;
+                            if (shellContext != null) {
+                              ScaffoldMessenger.of(shellContext).hideCurrentSnackBar();
+                              Navigator.of(shellContext).popUntil((route) => route.isFirst);
+                              BuyerNavigationShell.navKey.currentState?.setSelectedIndex(1);
+                            }
                           },
                         ),
                       ),
@@ -325,8 +335,12 @@ class AccountDetailScreen extends StatelessWidget {
                     ? () async {
                         final auth = context.read<AuthProvider>();
                         if (auth.currentUser == null) {
+                          ScaffoldMessenger.of(context).hideCurrentSnackBar();
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Please login to buy.')),
+                            const SnackBar(
+                              content: Text('Please login to buy.'),
+                              duration: Duration(seconds: 2),
+                            ),
                           );
                           return;
                         }

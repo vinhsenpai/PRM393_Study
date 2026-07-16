@@ -120,203 +120,208 @@ class _ProductDetailScreenRedesignedState
         foregroundColor: const Color(0xFFF8FAFC),
         elevation: 0,
       ),
-      body: Stack(
-        children: [
-          SafeArea(
-            bottom: false,
-            child: RefreshIndicator(
-              onRefresh: _refresh,
-              color: const Color(0xFF6366F1),
-              child: CustomScrollView(
-                slivers: [
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(14, 14, 14, 10),
-                      child: Hero(
-                        tag: 'product_${_product.id}_hero',
-                        child: MarketplaceImageCarousel(
-                          imageUrls: _product.imageUrls,
-                          height: 320,
+      body: SafeArea(
+        bottom: false,
+        child: RefreshIndicator(
+          onRefresh: _refresh,
+          color: const Color(0xFF6366F1),
+          child: CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 14, 14, 10),
+                  child: Hero(
+                    tag: 'product_${_product.id}_hero',
+                    child: MarketplaceImageCarousel(
+                      imageUrls: _product.imageUrls,
+                      height: 320,
+                    ),
+                  ),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 4, 14, 18),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _InfoBlock(
+                        priceText: '${_product.price.toStringAsFixed(0)} đ',
+                        gameText: _product.game,
+                        sellerName: _sellerName,
+                        available: available,
+                      ),
+                      const SizedBox(height: 14),
+                      if (tags.isNotEmpty)
+                        MarketplaceChipRow(chips: tags),
+                      if (tags.isEmpty)
+                        const Padding(
+                          padding: EdgeInsets.only(top: 2),
+                          child: Text(
+                            'No tags',
+                            style: TextStyle(color: Color(0xFF94A3B8)),
+                          ),
                         ),
-                      ),
-                    ),
-                  ),
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(14, 4, 14, 18),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _InfoBlock(
-                            priceText: '${_product.price.toStringAsFixed(0)} đ',
-                            gameText: _product.game,
-                            sellerName: _sellerName,
-                            available: available,
-                          ),
-                          const SizedBox(height: 14),
-                          if (tags.isNotEmpty)
-                            MarketplaceChipRow(chips: tags),
-                          if (tags.isEmpty)
-                            const Padding(
-                              padding: EdgeInsets.only(top: 2),
-                              child: Text(
-                                'No tags',
-                                style: TextStyle(color: Color(0xFF94A3B8)),
-                              ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Description',
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleMedium
+                            ?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              color: const Color(0xFFF8FAFC),
                             ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Description',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium
-                                ?.copyWith(
-                                  fontWeight: FontWeight.w800,
-                                  color: const Color(0xFFF8FAFC),
-                                ),
-                          ),
-                          const SizedBox(height: 10),
-                          if (desc.isEmpty)
-                            const Text(
-                              'No description available.',
-                              style: TextStyle(color: Color(0xFF94A3B8)),
-                            )
-                          else
-                            ExpandableText(
-                              text: _product.description,
-                              maxLines: 5,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium
-                                  ?.copyWith(height: 1.5, color: const Color(0xFF94A3B8)),
-                              readMoreText: 'Read more',
-                              readLessText: 'Read less',
-                            ),
-                          const SizedBox(height: 100),
-                        ],
                       ),
-                    ),
+                      const SizedBox(height: 10),
+                      if (desc.isEmpty)
+                        const Text(
+                          'No description available.',
+                          style: TextStyle(color: Color(0xFF94A3B8)),
+                        )
+                      else
+                        ExpandableText(
+                          text: _product.description,
+                          maxLines: 5,
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.copyWith(height: 1.5, color: const Color(0xFF94A3B8)),
+                          readMoreText: 'Read more',
+                          readLessText: 'Read less',
+                        ),
+                      const SizedBox(height: 100),
+                    ],
                   ),
-                ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      bottomSheet: StickyProductActionBar(
+        isAvailable: available,
+        onContact: () async {
+          if (buyerId.isEmpty) {
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Please login to contact the seller.'),
+                duration: Duration(seconds: 2),
+              ),
+            );
+            return;
+          }
+
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (context) =>
+                const Center(child: CircularProgressIndicator()),
+          );
+
+          final fallbackSellerName =
+              _sellerName.isNotEmpty ? _sellerName : 'Seller';
+
+          if (context.mounted) {
+            Navigator.pop(context);
+
+            final rawName = auth.currentUser?.name ?? '';
+            final email = auth.currentUser?.email ?? 'Buyer';
+            final buyerName =
+                (rawName.trim().isNotEmpty && rawName != 'No name set')
+                    ? rawName
+                    : email;
+
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => ChatScreen(
+                  buyerId: buyerId,
+                  buyerName: buyerName,
+                  sellerId: sellerId,
+                  sellerName: fallbackSellerName,
+                  productId: _product.id,
+                  productTitle: _product.title,
+                ),
+              ),
+            );
+          }
+        },
+        onBuyNow: () async {
+          if (!available) {
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('This item is currently not available.'),
+                duration: Duration(seconds: 2),
+              ),
+            );
+            return;
+          }
+          if (buyerId.isEmpty) {
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Please login to buy.'),
+                duration: Duration(seconds: 2),
+              ),
+            );
+            return;
+          }
+
+          await cart.addToCart(_product);
+          if (!context.mounted) return;
+
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const CheckoutScreen()),
+          );
+        },
+        onAddToCart: () async {
+          if (!available) {
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('This item is currently not available.'),
+                duration: Duration(seconds: 2),
+              ),
+            );
+            return;
+          }
+
+          await cart.addToCart(_product);
+          if (!context.mounted) return;
+
+          ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              backgroundColor: const Color(0xFF1E293B),
+              duration: const Duration(seconds: 2),
+              content: const Text(
+                'Product added to cart!',
+                style: TextStyle(color: Color(0xFFF8FAFC)),
+              ),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+                side: const BorderSide(color: Color(0xFF334155)),
+              ),
+              action: SnackBarAction(
+                label: 'VIEW CART',
+                textColor: const Color(0xFF6366F1),
+                onPressed: () {
+                  final shellContext = BuyerNavigationShell.navKey.currentContext;
+                  if (shellContext != null) {
+                    ScaffoldMessenger.of(shellContext).hideCurrentSnackBar();
+                    Navigator.of(shellContext).popUntil((route) => route.isFirst);
+                    BuyerNavigationShell.navKey.currentState?.setSelectedIndex(1);
+                  }
+                },
               ),
             ),
-          ),
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: StickyProductActionBar(
-              isAvailable: available,
-              onContact: () async {
-                if (buyerId.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Please login to contact the seller.'),
-                    ),
-                  );
-                  return;
-                }
-
-                showDialog(
-                  context: context,
-                  barrierDismissible: false,
-                  builder: (context) =>
-                      const Center(child: CircularProgressIndicator()),
-                );
-
-                final fallbackSellerName =
-                    _sellerName.isNotEmpty ? _sellerName : 'Seller';
-
-                if (context.mounted) {
-                  Navigator.pop(context);
-
-                  final rawName = auth.currentUser?.name ?? '';
-                  final email = auth.currentUser?.email ?? 'Buyer';
-                  final buyerName =
-                      (rawName.trim().isNotEmpty && rawName != 'No name set')
-                          ? rawName
-                          : email;
-
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ChatScreen(
-                        buyerId: buyerId,
-                        buyerName: buyerName,
-                        sellerId: sellerId,
-                        sellerName: fallbackSellerName,
-                        productId: _product.id,
-                        productTitle: _product.title,
-                      ),
-                    ),
-                  );
-                }
-              },
-              onBuyNow: () async {
-                if (!available) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('This item is currently not available.'),
-                    ),
-                  );
-                  return;
-                }
-                if (buyerId.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Please login to buy.'),
-                    ),
-                  );
-                  return;
-                }
-
-                await cart.addToCart(_product);
-                if (!context.mounted) return;
-
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const CheckoutScreen()),
-                );
-              },
-              onAddToCart: () async {
-                if (!available) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('This item is currently not available.'),
-                    ),
-                  );
-                  return;
-                }
-
-                await cart.addToCart(_product);
-                if (!context.mounted) return;
-
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    backgroundColor: const Color(0xFF1E293B),
-                    content: const Text(
-                      'Product added to cart!',
-                      style: TextStyle(color: Color(0xFFF8FAFC)),
-                    ),
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      side: const BorderSide(color: Color(0xFF334155)),
-                    ),
-                    action: SnackBarAction(
-                      label: 'VIEW CART',
-                      textColor: const Color(0xFF6366F1),
-                      onPressed: () {
-                        Navigator.popUntil(context, (route) => route.isFirst);
-                        BuyerNavigationShell.navKey.currentState?.setSelectedIndex(1);
-                      },
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }

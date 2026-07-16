@@ -167,7 +167,7 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
                     return const Center(child: Text('No products yet'));
                   }
                   return SizedBox(
-                    height: 220,
+                    height: 230,
                     child: ListView.builder(
                       scrollDirection: Axis.horizontal,
                       itemCount: snapshot.data!.length,

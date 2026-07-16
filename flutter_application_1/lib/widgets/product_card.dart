@@ -76,25 +76,58 @@ class ProductCard extends StatelessWidget {
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(11),
                   ),
-                  child: coverUrl != null
-                      ? (_isLocalPath(coverUrl) && !kIsWeb)
-                          ? Image.file(
-                              File(coverUrl),
-                              fit: BoxFit.cover,
-                              width: double.infinity,
-                              errorBuilder: (context, error, stackTrace) {
-                                return _buildImagePlaceholder(context);
-                              },
-                            )
-                          : Image.network(
-                              coverUrl,
-                              fit: BoxFit.cover,
-                              width: double.infinity,
-                              errorBuilder: (context, error, stackTrace) {
-                                return _buildImagePlaceholder(context);
-                              },
-                            )
-                      : _buildImagePlaceholder(context),
+                  child: Stack(
+                    children: [
+                      Positioned.fill(
+                        child: coverUrl != null
+                            ? (_isLocalPath(coverUrl) && !kIsWeb)
+                                ? Image.file(
+                                    File(coverUrl),
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return _buildImagePlaceholder(context);
+                                    },
+                                  )
+                                : Image.network(
+                                    coverUrl,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return _buildImagePlaceholder(context);
+                                    },
+                                  )
+                            : _buildImagePlaceholder(context),
+                      ),
+                      Positioned(
+                        top: 8,
+                        left: 8,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF1E293B).withValues(alpha: 0.85),
+                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(
+                              color: statusColor.withValues(alpha: 0.5),
+                            ),
+                          ),
+                          child: Text(
+                            product.stockStatus
+                                .toString()
+                                .split('.')
+                                .last
+                                .toUpperCase(),
+                            style: TextStyle(
+                              fontSize: 8,
+                              fontWeight: FontWeight.bold,
+                              color: statusColor,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
               Padding(
@@ -120,32 +153,6 @@ class ProductCard extends StatelessWidget {
                         fontSize: 14,
                         fontWeight: FontWeight.w900,
                         color: Color(0xFFF59E0B),
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: statusColor.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(4),
-                        border: Border.all(
-                          color: statusColor.withValues(alpha: 0.3),
-                        ),
-                      ),
-                      child: Text(
-                        product.stockStatus
-                            .toString()
-                            .split('.')
-                            .last
-                            .toUpperCase(),
-                        style: TextStyle(
-                          fontSize: 9,
-                          fontWeight: FontWeight.bold,
-                          color: statusColor,
-                        ),
                       ),
                     ),
                   ],
