@@ -110,6 +110,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           style: TextStyle(
             fontWeight: item.isRead ? FontWeight.w500 : FontWeight.bold,
             fontSize: 16,
+            color: const Color(0xFF0F172A),
           ),
         ),
         subtitle: Column(
