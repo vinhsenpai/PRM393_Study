@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -41,8 +42,10 @@ void main() async {
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  // Set the background messaging handler early on, as a top-level function
-  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+  if (!kIsWeb) {
+    // Set the background messaging handler early on, as a top-level function
+    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+  }
 
   // Khởi tạo Firebase Storage rõ ràng
   try {
@@ -53,11 +56,13 @@ void main() async {
   }
 
   // Initialize notification service and request permission
-  try {
-    await NotificationService().initNotifications();
-    debugPrint('Notification Service initialized successfully');
-  } catch (e) {
-    debugPrint('Error initializing Notification Service: $e');
+  if (!kIsWeb) {
+    try {
+      await NotificationService().initNotifications();
+      debugPrint('Notification Service initialized successfully');
+    } catch (e) {
+      debugPrint('Error initializing Notification Service: $e');
+    }
   }
 
   runApp(const GameAcctHubApp());

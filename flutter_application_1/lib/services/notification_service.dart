@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:googleapis_auth/auth_io.dart';
@@ -48,6 +49,10 @@ class NotificationService {
 
   // Initialize notifications: request permissions and setup listeners
   Future<void> initNotifications() async {
+    if (kIsWeb) {
+      debugPrint('NotificationService initialization bypassed on Web.');
+      return;
+    }
     // 1. Request notification permission
     NotificationSettings settings = await _fcm.requestPermission(
       alert: true,
@@ -171,7 +176,7 @@ class NotificationService {
 
   // Save current device's FCM token to Firestore
   Future<void> saveFcmToken(String userId) async {
-    if (userId.isEmpty) return;
+    if (kIsWeb || userId.isEmpty) return;
     try {
       final String? token = await _fcm.getToken();
       if (token != null) {
@@ -188,7 +193,7 @@ class NotificationService {
 
   // Delete FCM token from Firestore (e.g. on logout)
   Future<void> deleteFcmToken(String userId) async {
-    if (userId.isEmpty) return;
+    if (kIsWeb || userId.isEmpty) return;
     try {
       await _firestore.collection('users').doc(userId).update({
         'fcmToken': FieldValue.delete(),
@@ -207,6 +212,7 @@ class NotificationService {
     required String body,
     required Map<String, dynamic> payload,
   }) async {
+    if (kIsWeb) return;
     if (recipientToken.isEmpty) {
       debugPrint('Recipient token is empty, skipping push notification');
       return;
