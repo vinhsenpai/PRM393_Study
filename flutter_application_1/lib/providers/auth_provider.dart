@@ -26,9 +26,9 @@ class AuthProvider with ChangeNotifier {
         final doc = await _authService.firestore.collection('users').doc(uid).get();
         if (doc.exists && doc.data() != null) {
           _currentUser = User.fromDocument(uid, doc.data()!);
-          await NotificationService().saveFcmToken(uid);
           notifyListeners();
         }
+        await NotificationService().saveFcmToken(uid);
       }
     } catch (e) {
       debugPrint('Error initializing user: $e');

@@ -47,6 +47,8 @@ class NotificationService {
     }
   }
 
+  String? _currentUserId;
+
   // Initialize notifications: request permissions and setup listeners
   Future<void> initNotifications() async {
     if (kIsWeb) {
@@ -63,7 +65,7 @@ class NotificationService {
     if (settings.authorizationStatus == AuthorizationStatus.authorized) {
       debugPrint('User granted notification permissions');
     } else {
-      debugPrint('User declined or has not accepted notification permissions');
+      debugPrint('User declined or has not accepted notification permissions (status: ${settings.authorizationStatus})');
     }
 
     // 2. Android notification channel setup
@@ -103,24 +105,31 @@ class NotificationService {
             AndroidFlutterLocalNotificationsPlugin>()
         ?.createNotificationChannel(channel);
 
-    // 3. Listen for foreground messages
+    // 3. Listen for token refresh
+    _fcm.onTokenRefresh.listen((newToken) async {
+      debugPrint('FCM Token refreshed: $newToken');
+      if (_currentUserId != null && _currentUserId!.isNotEmpty) {
+        await saveFcmToken(_currentUserId!);
+      }
+    });
+
+    // 4. Listen for foreground messages
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      debugPrint('Got a message in the foreground: ${message.messageId}');
+      debugPrint('Got a message in the foreground: ${message.messageId}, data: ${message.data}');
       
       final RemoteNotification? notification = message.notification;
-      final AndroidNotification? android = message.notification?.android;
 
-      if (notification != null && android != null) {
+      if (notification != null) {
         _localNotifications.show(
           notification.hashCode,
-          notification.title,
-          notification.body,
+          notification.title ?? 'New Message',
+          notification.body ?? '',
           NotificationDetails(
             android: AndroidNotificationDetails(
               channel.id,
               channel.name,
               channelDescription: channel.description,
-              icon: android.smallIcon ?? '@mipmap/ic_launcher',
+              icon: '@mipmap/ic_launcher',
               importance: Importance.max,
               priority: Priority.high,
               playSound: true,
@@ -131,13 +140,13 @@ class NotificationService {
       }
     });
 
-    // 4. Listen for background clicks (when app is in background but running)
+    // 5. Listen for background clicks (when app is in background but running)
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
       debugPrint('A new onMessageOpenedApp event was published!');
       _handleNotificationClick(message.data);
     });
 
-    // 5. Handle click when app is opened from terminated state
+    // 6. Handle click when app is opened from terminated state
     final RemoteMessage? initialMessage = await _fcm.getInitialMessage();
     if (initialMessage != null) {
       debugPrint('App opened from terminated state via notification click');
@@ -177,17 +186,20 @@ class NotificationService {
   // Save current device's FCM token to Firestore
   Future<void> saveFcmToken(String userId) async {
     if (kIsWeb || userId.isEmpty) return;
+    _currentUserId = userId;
     try {
       final String? token = await _fcm.getToken();
-      if (token != null) {
+      if (token != null && token.isNotEmpty) {
         await _firestore.collection('users').doc(userId).set({
           'fcmToken': token,
           'updatedAt': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
-        debugPrint('FCM Token successfully saved/updated for user $userId: $token');
+        debugPrint('FCM Token successfully saved for user $userId: $token');
+      } else {
+        debugPrint('FCM Token returned null or empty string for user $userId');
       }
     } catch (e) {
-      debugPrint('Error saving FCM Token: $e');
+      debugPrint('Error saving FCM Token for user $userId: $e');
     }
   }
 

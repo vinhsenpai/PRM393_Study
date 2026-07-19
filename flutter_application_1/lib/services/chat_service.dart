@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/message.dart';
 import '../models/notification_item.dart';
@@ -104,10 +105,11 @@ class ChatService {
 
       // Fetch recipient's FCM token from Firestore
       final recipientDoc = await _firestore.collection('users').doc(receiverId).get();
-      if (recipientDoc.exists) {
+      if (recipientDoc.exists && recipientDoc.data() != null) {
         final recipientToken = recipientDoc.data()?['fcmToken']?.toString() ?? '';
         if (recipientToken.isNotEmpty) {
           final senderName = senderRole == 'buyer' ? buyerName : sellerName;
+          debugPrint('Sending FCM Push Notification to recipient $receiverId (token: $recipientToken)...');
           await notificationService.sendPushNotification(
             recipientToken: recipientToken,
             title: 'New message from $senderName',
@@ -122,10 +124,14 @@ class ChatService {
               'chatId': chatId,
             },
           );
+        } else {
+          debugPrint('WARNING: Recipient user $receiverId does NOT have an fcmToken in Firestore! Make sure user $receiverId has logged in on an Android device and granted notification permissions.');
         }
+      } else {
+        debugPrint('WARNING: Recipient user document $receiverId does not exist in Firestore!');
       }
-    } catch (_) {
-      // ignore notification failures
+    } catch (e, stack) {
+      debugPrint('Error sending notification in ChatService.sendMessage: $e\n$stack');
     }
   }
 
