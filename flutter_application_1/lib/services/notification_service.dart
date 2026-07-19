@@ -34,7 +34,7 @@ class NotificationService {
       _firestore.collection('notifications');
 
   // Obtain authenticated client via Service Account JSON file loaded from assets
-  Future<AuthClient> _getAuthenticatedClient() async {
+  Future<AuthClient?> _getAuthenticatedClient() async {
     try {
       final String jsonString = await rootBundle.loadString('assets/service_account.json');
       final Map<String, dynamic> serviceAccount = jsonDecode(jsonString) as Map<String, dynamic>;
@@ -42,8 +42,8 @@ class NotificationService {
       final scopes = ['https://www.googleapis.com/auth/firebase.messaging'];
       return await clientViaServiceAccount(credentials, scopes);
     } catch (e) {
-      debugPrint('Error loading service account credentials: $e');
-      rethrow;
+      debugPrint('FCM Push Notification Notice: assets/service_account.json not found or invalid: $e');
+      return null;
     }
   }
 
@@ -220,6 +220,10 @@ class NotificationService {
 
     try {
       final client = await _getAuthenticatedClient();
+      if (client == null) {
+        debugPrint('Skipping push notification: Service account credentials not available.');
+        return;
+      }
 
       // FCM V1 requires payload data values to be strings
       final Map<String, String> stringPayload = {};
