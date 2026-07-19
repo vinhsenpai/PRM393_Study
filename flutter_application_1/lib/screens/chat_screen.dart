@@ -145,7 +145,10 @@ class _ChatScreenState extends State<ChatScreen> {
                 }
                 // Scroll to bottom when new messages arrive
                 WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (_scrollController.hasClients) {
+                  if (mounted &&
+                      _scrollController.hasClients &&
+                      _scrollController.positions.length == 1 &&
+                      _scrollController.position.hasContentDimensions) {
                     _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
                   }
                 });

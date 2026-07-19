@@ -256,8 +256,13 @@ class NotificationService {
               'body': body,
             },
             'android': <String, dynamic>{
+              'priority': 'HIGH',
               'notification': <String, dynamic>{
                 'channel_id': 'messages_channel',
+                'notification_priority': 'PRIORITY_MAX',
+                'sound': 'default',
+                'default_sound': true,
+                'default_vibrate_timings': true,
               },
             },
             'data': stringPayload,
