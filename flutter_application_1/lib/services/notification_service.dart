@@ -273,7 +273,7 @@ class NotificationService {
       client.close();
 
       if (response.statusCode == 200) {
-        debugPrint('FCM V1 push notification sent successfully');
+        debugPrint('FCM V1 push notification sent successfully! Response: ${response.body}');
       } else {
         debugPrint('FCM V1 push notification failed with status: ${response.statusCode}, response: ${response.body}');
       }
