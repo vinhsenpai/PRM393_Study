@@ -12,10 +12,15 @@ class Message {
   });
 
   factory Message.fromDocument(Map<String, dynamic> doc) {
+    final rawTimestamp = doc['createdAt'];
+    final DateTime timestamp = rawTimestamp is Timestamp
+        ? rawTimestamp.toDate()
+        : (rawTimestamp is DateTime ? rawTimestamp : DateTime.now());
+
     return Message(
-      senderId: doc['senderId'] as String,
-      text: doc['text'] as String,
-      createdAt: (doc['createdAt'] as Timestamp).toDate(),
+      senderId: doc['senderId']?.toString() ?? '',
+      text: doc['text']?.toString() ?? '',
+      createdAt: timestamp,
     );
   }
 
