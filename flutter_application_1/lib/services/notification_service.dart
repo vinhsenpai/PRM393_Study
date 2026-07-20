@@ -13,6 +13,71 @@ import '../main.dart' show navigatorKey;
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   debugPrint("Handling background message: ${message.messageId}");
+
+  // Initialize local notifications to show notification even in background/terminated
+  final FlutterLocalNotificationsPlugin localNotifications =
+      FlutterLocalNotificationsPlugin();
+
+  const AndroidInitializationSettings initializationSettingsAndroid =
+      AndroidInitializationSettings('@mipmap/ic_launcher');
+
+  const InitializationSettings initializationSettings = InitializationSettings(
+    android: initializationSettingsAndroid,
+  );
+
+  await localNotifications.initialize(initializationSettings);
+
+  // Create Android notification channel
+  const AndroidNotificationChannel channel = AndroidNotificationChannel(
+    'messages_channel',
+    'Message Notifications',
+    description: 'This channel is used for chat message notifications.',
+    importance: Importance.max,
+    playSound: true,
+    showBadge: true,
+    enableVibration: true,
+  );
+
+  await localNotifications
+      .resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin
+      >()
+      ?.createNotificationChannel(channel);
+
+  // Show local notification (get title/body from data)
+  final title = message.data['title']?.toString() ?? 'New Message';
+  final body = message.data['body']?.toString() ?? '';
+
+  if (title.isNotEmpty || body.isNotEmpty) {
+    const AndroidNotificationDetails androidPlatformChannelSpecifics =
+        AndroidNotificationDetails(
+          'messages_channel',
+          'Message Notifications',
+          channelDescription:
+              'This channel is used for chat message notifications.',
+          importance: Importance.max,
+          priority: Priority.high,
+          playSound: true,
+          showWhen: true,
+          autoCancel: true,
+          enableVibration: true,
+        );
+
+    const NotificationDetails platformChannelSpecifics = NotificationDetails(
+      android: androidPlatformChannelSpecifics,
+    );
+
+    final chatId = message.data['chatId']?.toString();
+    final notificationId = chatId != null ? chatId.hashCode : title.hashCode;
+
+    await localNotifications.show(
+      notificationId,
+      title,
+      body,
+      platformChannelSpecifics,
+      payload: jsonEncode(message.data),
+    );
+  }
 }
 
 class NotificationService {
@@ -111,13 +176,21 @@ class NotificationService {
         'Got a message in the foreground: ${message.messageId}, data: ${message.data}',
       );
 
-      final RemoteNotification? notification = message.notification;
+      // Get title/body from data (since we send only data messages now)
+      final title = message.data['title']?.toString() ?? 'New Message';
+      final body = message.data['body']?.toString() ?? '';
 
-      if (notification != null) {
+      if (title.isNotEmpty || body.isNotEmpty) {
+        // Use chatId from payload as notification ID to group same chat notifications
+        final chatId = message.data['chatId']?.toString();
+        final notificationId = chatId != null
+            ? chatId.hashCode
+            : title.hashCode;
+
         _showLocalNotification(
-          id: notification.hashCode,
-          title: notification.title ?? 'New Message',
-          body: notification.body ?? '',
+          id: notificationId,
+          title: title,
+          body: body,
           payload: message.data,
         );
       }
@@ -173,7 +246,7 @@ class NotificationService {
     );
   }
 
-  // Listen for new notifications from Firestore and show local notification
+  // Listen for new notifications from Firestore (for UI updates only, no notifications)
   void listenForNewNotifications(String userId) {
     if (kIsWeb || userId.isEmpty) return;
     _currentUserId = userId;
@@ -181,45 +254,14 @@ class NotificationService {
     // Cancel previous subscription if any
     _notificationsSubscription?.cancel();
 
-    // Record the start time to ignore old notifications
-    final startTime = DateTime.now();
-
-    // Listen to new notifications (all, but only process added ones after start time)
+    // Just listen to keep the stream active for UI (e.g., NotificationsScreen)
+    // No need to show local notifications here - FCM handles that via Cloud Functions
     _notificationsSubscription = _notificationsCollection
         .where('userId', isEqualTo: userId)
         .orderBy('createdAt', descending: true)
         .snapshots()
         .listen((snapshot) {
-          for (var docChange in snapshot.docChanges) {
-            if (docChange.type == DocumentChangeType.added) {
-              // New notification added
-              final notification = AppNotificationItem.fromMap(
-                id: docChange.doc.id,
-                map: docChange.doc.data()!,
-              );
-
-              // Only process notifications created after we started listening
-              if (notification.timestamp.isBefore(startTime)) {
-                continue;
-              }
-
-              debugPrint('New notification received: ${notification.title}');
-
-              // Use chatId from payload as notification ID to group same chat notifications
-              final chatId = notification.payload['chatId']?.toString();
-              final notificationId = chatId != null
-                  ? chatId.hashCode
-                  : notification.id.hashCode;
-
-              // Show/update local notification
-              _showLocalNotification(
-                id: notificationId,
-                title: notification.title,
-                body: notification.body,
-                payload: notification.payload,
-              );
-            }
-          }
+          // Do nothing - just keep the stream open for UI listeners
         });
   }
 
@@ -270,9 +312,6 @@ class NotificationService {
           'updatedAt': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
         debugPrint('FCM Token successfully saved for user $userId: $token');
-
-        // Start listening for notifications for this user
-        listenForNewNotifications(userId);
       } else {
         debugPrint('FCM Token returned null or empty string for user $userId');
       }
