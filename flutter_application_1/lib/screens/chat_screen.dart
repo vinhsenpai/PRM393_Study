@@ -215,10 +215,16 @@ class _ChatScreenState extends State<ChatScreen> {
     final text = _messageController.text;
     if (text.trim().isNotEmpty) {
       _chatService.sendMessage(
-        chatId,
-        myId,
-        myRole,
-        text,
+        chatId: chatId,
+        senderId: myId,
+        senderRole: myRole,
+        text: text,
+        buyerId: widget.buyerId,
+        buyerName: widget.buyerName,
+        sellerId: widget.sellerId,
+        sellerName: widget.sellerName,
+        productId: widget.productId,
+        productTitle: widget.productTitle,
       );
       _messageController.clear();
     }

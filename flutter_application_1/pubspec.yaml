@@ -60,6 +60,7 @@ dependencies:
   # (no extra deps required for cart)
   equatable: ^2.0.5
   fl_chart: ^1.2.0
+  shared_preferences: ^2.5.5
 
 
     

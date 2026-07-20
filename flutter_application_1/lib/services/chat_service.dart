@@ -42,71 +42,67 @@ class ChatService {
   }
 
   // Send a message in a chat
-  Future<void> sendMessage(
-    String chatId,
-    String senderId,
-    String senderRole,
-    String text,
-  ) async {
-    if (text.trim().isEmpty) return;
+  Future<void> sendMessage({
+    required String chatId,
+    required String senderId,
+    required String senderRole,
+    required String text,
+    required String buyerId,
+    required String buyerName,
+    required String sellerId,
+    required String sellerName,
+    required String productId,
+    required String productTitle,
+  }) async {
+    final cleanText = text.trim();
+    if (cleanText.isEmpty) return;
 
-    // Add message to messages subcollection
     final DocumentReference chatDoc = _firestore.collection('chats').doc(chatId);
     final CollectionReference messages = chatDoc.collection('messages');
-    
-    await messages.add({
-      'senderId': senderId,
-      'senderRole': senderRole, // 'buyer' or 'seller'
-      'text': text.trim(),
-      'createdAt': FieldValue.serverTimestamp(),
-      'seen': false,
-    });
+    final receiverId = senderRole == 'buyer' ? sellerId : buyerId;
 
-    // Update the chat's lastMessage and updatedAt
-    await chatDoc.update({
-      'lastMessage': text.trim(),
-      'updatedAt': FieldValue.serverTimestamp(),
-    });
+    final List<Future<dynamic>> futures = [
+      // 1. Save message
+      messages.add({
+        'senderId': senderId,
+        'senderRole': senderRole,
+        'text': cleanText,
+        'createdAt': FieldValue.serverTimestamp(),
+        'seen': false,
+      }),
+      // 2. Update last message status in chat
+      chatDoc.update({
+        'lastMessage': cleanText,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }),
+    ];
 
-    // Create notification for the other participant
-    try {
-      final chatSnapshot = await chatDoc.get();
-      if (!chatSnapshot.exists) return;
-      final data = chatSnapshot.data() as Map<String, dynamic>;
-
-      final buyerId = data['buyerId']?.toString() ?? '';
-      final buyerName = data['buyerName']?.toString() ?? '';
-      final sellerId = data['sellerId']?.toString() ?? '';
-      final sellerName = data['sellerName']?.toString() ?? '';
-      final productId = data['productId']?.toString() ?? '';
-      final productTitle = data['productTitle']?.toString() ?? '';
-
-      final receiverId = senderRole == 'buyer' ? sellerId : buyerId;
-      if (receiverId.isEmpty) return;
-
-      final notificationService = NotificationService();
-      
-      // Create local/in-app notification entry in Firestore
-      await notificationService.createNotification(
-        receiverId: receiverId,
-        type: NotificationType.message,
-        title: 'New message',
-        body: text.trim(),
-        payload: {
-          'buyerId': buyerId,
-          'buyerName': buyerName,
-          'sellerId': sellerId,
-          'sellerName': sellerName,
-          'productId': productId,
-          'productTitle': productTitle,
-          'chatId': chatId,
-        },
+    // 3. Create notification concurrently if receiverId is valid
+    if (receiverId.isNotEmpty) {
+      futures.add(
+        NotificationService().createNotification(
+          receiverId: receiverId,
+          type: NotificationType.message,
+          title: 'New message',
+          body: cleanText,
+          payload: {
+            'buyerId': buyerId,
+            'buyerName': buyerName,
+            'sellerId': sellerId,
+            'sellerName': sellerName,
+            'productId': productId,
+            'productTitle': productTitle,
+            'chatId': chatId,
+          },
+        ).catchError((e, stack) {
+          debugPrint('Error sending notification in ChatService.sendMessage: $e\n$stack');
+          return '';
+        }),
       );
-
-      debugPrint('Notification created for user $receiverId');
-    } catch (e, stack) {
-      debugPrint('Error sending notification in ChatService.sendMessage: $e\n$stack');
     }
+
+    // Execute all Firestore operations simultaneously
+    await Future.wait(futures);
   }
 
   // Get messages stream for a chat
