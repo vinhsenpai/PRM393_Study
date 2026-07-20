@@ -87,6 +87,12 @@ class GameAcctHubApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         home: Consumer<AuthProvider>(
           builder: (context, auth, _) {
+            if (auth.isLoading) {
+              return const Scaffold(
+                body: Center(child: CircularProgressIndicator()),
+              );
+            }
+            
             if (!auth.isAuthenticated || auth.currentUser == null) {
               return const LoginScreen();
             }

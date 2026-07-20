@@ -10,6 +10,7 @@ class AuthProvider with ChangeNotifier {
   }
 
   final AuthService _authService;
+  bool _isLoading = true;
 
   FirebaseFirestore get firestore => _authService.firestore;
 
@@ -26,12 +27,14 @@ class AuthProvider with ChangeNotifier {
         final doc = await _authService.firestore.collection('users').doc(uid).get();
         if (doc.exists && doc.data() != null) {
           _currentUser = User.fromDocument(uid, doc.data()!);
-          notifyListeners();
         }
         await NotificationService().saveFcmToken(uid);
       }
     } catch (e) {
       debugPrint('Error initializing user: $e');
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
   }
 
@@ -40,6 +43,8 @@ class AuthProvider with ChangeNotifier {
   User? get currentUser => _currentUser;
 
   bool get isAuthenticated => _currentUser != null;
+
+  bool get isLoading => _isLoading;
 
   bool get isBuyer => _currentUser?.role == UserRole.buyer;
   bool get isSeller => _currentUser?.role == UserRole.seller;
