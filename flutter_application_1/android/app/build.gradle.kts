@@ -6,7 +6,8 @@ plugins {
 }
 
 android {
-    namespace = "com.example.flutter_application_1"
+    namespace = "com.example.Prm393_Group5"
+
 
     compileSdk = 36
     ndkVersion = "28.2.13676358"
@@ -21,8 +22,8 @@ android {
         jvmTarget = "1.8"
     }
 
-    defaultConfig {
-        applicationId = "com.example.flutter_application_1"
+defaultConfig {
+        applicationId = "com.example.Prm393_Group5"
 
         minSdk = flutter.minSdkVersion
         targetSdk = 35
