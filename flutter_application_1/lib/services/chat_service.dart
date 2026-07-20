@@ -68,7 +68,7 @@ class ChatService {
       'updatedAt': FieldValue.serverTimestamp(),
     });
 
-    // Create notification and send push notification for the other participant
+    // Create notification for the other participant
     try {
       final chatSnapshot = await chatDoc.get();
       if (!chatSnapshot.exists) return;
@@ -103,33 +103,7 @@ class ChatService {
         },
       );
 
-      // Fetch recipient's FCM token from Firestore
-      final recipientDoc = await _firestore.collection('users').doc(receiverId).get();
-      if (recipientDoc.exists && recipientDoc.data() != null) {
-        final recipientToken = recipientDoc.data()?['fcmToken']?.toString() ?? '';
-        if (recipientToken.isNotEmpty) {
-          final senderName = senderRole == 'buyer' ? buyerName : sellerName;
-          debugPrint('Sending FCM Push Notification to recipient $receiverId (token: $recipientToken)...');
-          await notificationService.sendPushNotification(
-            recipientToken: recipientToken,
-            title: 'New message from $senderName',
-            body: text.trim(),
-            payload: {
-              'buyerId': buyerId,
-              'buyerName': buyerName,
-              'sellerId': sellerId,
-              'sellerName': sellerName,
-              'productId': productId,
-              'productTitle': productTitle,
-              'chatId': chatId,
-            },
-          );
-        } else {
-          debugPrint('WARNING: Recipient user $receiverId does NOT have an fcmToken in Firestore! Make sure user $receiverId has logged in on an Android device and granted notification permissions.');
-        }
-      } else {
-        debugPrint('WARNING: Recipient user document $receiverId does not exist in Firestore!');
-      }
+      debugPrint('Notification created for user $receiverId');
     } catch (e, stack) {
       debugPrint('Error sending notification in ChatService.sendMessage: $e\n$stack');
     }

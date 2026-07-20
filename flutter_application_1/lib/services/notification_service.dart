@@ -1,11 +1,10 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:googleapis_auth/auth_io.dart';
 import '../models/notification_item.dart';
 import '../screens/chat_screen.dart';
 import '../main.dart' show navigatorKey;
@@ -33,21 +32,8 @@ class NotificationService {
   CollectionReference<Map<String, dynamic>> get _notificationsCollection =>
       _firestore.collection('notifications');
 
-  // Obtain authenticated client via Service Account JSON file loaded from assets
-  Future<AuthClient?> _getAuthenticatedClient() async {
-    try {
-      final String jsonString = await rootBundle.loadString('assets/service_account.json');
-      final Map<String, dynamic> serviceAccount = jsonDecode(jsonString) as Map<String, dynamic>;
-      final credentials = ServiceAccountCredentials.fromJson(serviceAccount);
-      final scopes = ['https://www.googleapis.com/auth/firebase.messaging'];
-      return await clientViaServiceAccount(credentials, scopes);
-    } catch (e) {
-      debugPrint('FCM Push Notification Notice: assets/service_account.json not found or invalid: $e');
-      return null;
-    }
-  }
-
   String? _currentUserId;
+  StreamSubscription? _notificationsSubscription;
 
   // Initialize notifications: request permissions and setup listeners
   Future<void> initNotifications() async {
@@ -60,21 +46,26 @@ class NotificationService {
       alert: true,
       badge: true,
       sound: true,
+      provisional: false,
     );
 
     if (settings.authorizationStatus == AuthorizationStatus.authorized) {
       debugPrint('User granted notification permissions');
     } else {
-      debugPrint('User declined or has not accepted notification permissions (status: ${settings.authorizationStatus})');
+      debugPrint(
+        'User declined or has not accepted notification permissions (status: ${settings.authorizationStatus})',
+      );
     }
 
-    // 2. Android notification channel setup
+    // 2. Android notification channel setup for heads-up notifications
     const AndroidNotificationChannel channel = AndroidNotificationChannel(
       'messages_channel', // id
       'Message Notifications', // name
       description: 'This channel is used for chat message notifications.',
       importance: Importance.max,
       playSound: true,
+      showBadge: true,
+      enableVibration: true,
     );
 
     // Initialize local notifications settings for Android
@@ -102,7 +93,8 @@ class NotificationService {
     // Create the channel on Android
     await _localNotifications
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
+          AndroidFlutterLocalNotificationsPlugin
+        >()
         ?.createNotificationChannel(channel);
 
     // 3. Listen for token refresh
@@ -113,29 +105,20 @@ class NotificationService {
       }
     });
 
-    // 4. Listen for foreground messages
+    // 4. Listen for foreground messages from FCM
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      debugPrint('Got a message in the foreground: ${message.messageId}, data: ${message.data}');
-      
+      debugPrint(
+        'Got a message in the foreground: ${message.messageId}, data: ${message.data}',
+      );
+
       final RemoteNotification? notification = message.notification;
 
       if (notification != null) {
-        _localNotifications.show(
-          notification.hashCode,
-          notification.title ?? 'New Message',
-          notification.body ?? '',
-          NotificationDetails(
-            android: AndroidNotificationDetails(
-              channel.id,
-              channel.name,
-              channelDescription: channel.description,
-              icon: '@mipmap/ic_launcher',
-              importance: Importance.max,
-              priority: Priority.high,
-              playSound: true,
-            ),
-          ),
-          payload: jsonEncode(message.data),
+        _showLocalNotification(
+          id: notification.hashCode,
+          title: notification.title ?? 'New Message',
+          body: notification.body ?? '',
+          payload: message.data,
         );
       }
     });
@@ -152,6 +135,98 @@ class NotificationService {
       debugPrint('App opened from terminated state via notification click');
       _handleNotificationClick(initialMessage.data);
     }
+  }
+
+  // Show local notification with heads-up
+  Future<void> _showLocalNotification({
+    required int id,
+    required String title,
+    required String body,
+    required Map<String, dynamic> payload,
+  }) async {
+    const AndroidNotificationDetails androidPlatformChannelSpecifics =
+        AndroidNotificationDetails(
+          'messages_channel',
+          'Message Notifications',
+          channelDescription:
+              'This channel is used for chat message notifications.',
+          importance: Importance.max,
+          priority: Priority.high,
+          playSound: true,
+          showWhen: true,
+          autoCancel: true,
+          enableVibration: true,
+          fullScreenIntent:
+              false, // Set to true if you want full-screen for urgent
+        );
+
+    const NotificationDetails platformChannelSpecifics = NotificationDetails(
+      android: androidPlatformChannelSpecifics,
+    );
+
+    await _localNotifications.show(
+      id,
+      title,
+      body,
+      platformChannelSpecifics,
+      payload: jsonEncode(payload),
+    );
+  }
+
+  // Listen for new notifications from Firestore and show local notification
+  void listenForNewNotifications(String userId) {
+    if (kIsWeb || userId.isEmpty) return;
+    _currentUserId = userId;
+
+    // Cancel previous subscription if any
+    _notificationsSubscription?.cancel();
+
+    // Record the start time to ignore old notifications
+    final startTime = DateTime.now();
+
+    // Listen to new notifications (all, but only process added ones after start time)
+    _notificationsSubscription = _notificationsCollection
+        .where('userId', isEqualTo: userId)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .listen((snapshot) {
+          for (var docChange in snapshot.docChanges) {
+            if (docChange.type == DocumentChangeType.added) {
+              // New notification added
+              final notification = AppNotificationItem.fromMap(
+                id: docChange.doc.id,
+                map: docChange.doc.data()!,
+              );
+
+              // Only process notifications created after we started listening
+              if (notification.timestamp.isBefore(startTime)) {
+                continue;
+              }
+
+              debugPrint('New notification received: ${notification.title}');
+
+              // Use chatId from payload as notification ID to group same chat notifications
+              final chatId = notification.payload['chatId']?.toString();
+              final notificationId = chatId != null
+                  ? chatId.hashCode
+                  : notification.id.hashCode;
+
+              // Show/update local notification
+              _showLocalNotification(
+                id: notificationId,
+                title: notification.title,
+                body: notification.body,
+                payload: notification.payload,
+              );
+            }
+          }
+        });
+  }
+
+  // Stop listening for notifications
+  void stopListeningForNotifications() {
+    _notificationsSubscription?.cancel();
+    _notificationsSubscription = null;
   }
 
   // Handle clicking on notification to navigate to ChatScreen
@@ -195,6 +270,9 @@ class NotificationService {
           'updatedAt': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
         debugPrint('FCM Token successfully saved for user $userId: $token');
+
+        // Start listening for notifications for this user
+        listenForNewNotifications(userId);
       } else {
         debugPrint('FCM Token returned null or empty string for user $userId');
       }
@@ -207,6 +285,7 @@ class NotificationService {
   Future<void> deleteFcmToken(String userId) async {
     if (kIsWeb || userId.isEmpty) return;
     try {
+      stopListeningForNotifications();
       await _firestore.collection('users').doc(userId).update({
         'fcmToken': FieldValue.delete(),
         'updatedAt': FieldValue.serverTimestamp(),
@@ -214,71 +293,6 @@ class NotificationService {
       debugPrint('FCM Token successfully deleted for user $userId');
     } catch (e) {
       debugPrint('Error deleting FCM Token: $e');
-    }
-  }
-
-  // Send Push Notification from client side via FCM API V1 (OAuth2 AuthClient)
-  Future<void> sendPushNotification({
-    required String recipientToken,
-    required String title,
-    required String body,
-    required Map<String, dynamic> payload,
-  }) async {
-    if (kIsWeb) return;
-    if (recipientToken.isEmpty) {
-      debugPrint('Recipient token is empty, skipping push notification');
-      return;
-    }
-
-    try {
-      final client = await _getAuthenticatedClient();
-      if (client == null) {
-        debugPrint('Skipping push notification: Service account credentials not available.');
-        return;
-      }
-
-      // FCM V1 requires payload data values to be strings
-      final Map<String, String> stringPayload = {};
-      payload.forEach((key, value) {
-        stringPayload[key] = value.toString();
-      });
-
-      final response = await client.post(
-        Uri.parse('https://fcm.googleapis.com/v1/projects/prm001-bf36b/messages:send'),
-        headers: <String, String>{
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode(<String, dynamic>{
-          'message': <String, dynamic>{
-            'token': recipientToken,
-            'notification': <String, dynamic>{
-              'title': title,
-              'body': body,
-            },
-            'android': <String, dynamic>{
-              'priority': 'HIGH',
-              'notification': <String, dynamic>{
-                'channel_id': 'messages_channel',
-                'notification_priority': 'PRIORITY_MAX',
-                'sound': 'default',
-                'default_sound': true,
-                'default_vibrate_timings': true,
-              },
-            },
-            'data': stringPayload,
-          }
-        }),
-      );
-
-      client.close();
-
-      if (response.statusCode == 200) {
-        debugPrint('FCM V1 push notification sent successfully! Response: ${response.body}');
-      } else {
-        debugPrint('FCM V1 push notification failed with status: ${response.statusCode}, response: ${response.body}');
-      }
-    } catch (e) {
-      debugPrint('Error sending FCM V1 push notification: $e');
     }
   }
 
@@ -290,12 +304,14 @@ class NotificationService {
         .where('userId', isEqualTo: userId)
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => AppNotificationItem.fromMap(
-                  id: doc.id,
-                  map: doc.data(),
-                ))
-            .toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map(
+                (doc) =>
+                    AppNotificationItem.fromMap(id: doc.id, map: doc.data()),
+              )
+              .toList(),
+        );
   }
 
   Future<void> markAsRead({
