@@ -19,7 +19,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
 
   bool _isLoading = false;
-  bool _isGoogleLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -90,18 +89,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       )
                     : const Text('Login'),
               ),
-              const SizedBox(height: 16),
-              OutlinedButton.icon(
-                onPressed: _isGoogleLoading ? null : _handleGoogleLogin,
-                icon: const Icon(Icons.login),
-                label: _isGoogleLoading
-                    ? const SizedBox(
-                        height: 18,
-                        width: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Text('Continue with Google'),
-              ),
+
               const SizedBox(height: 16),
               TextButton(
                 onPressed: () {
@@ -149,23 +137,6 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
 
-  Future<void> _handleGoogleLogin() async {
-    setState(() => _isGoogleLoading = true);
-    try {
-      await context.read<AuthProvider>().signInWithGoogle();
-      if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Signed in with Google!')),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AuthErrorUtils.parseAuthErrorMessage(e))),
-      );
-    } finally {
-      if (mounted) setState(() => _isGoogleLoading = false);
-    }
-  }
 }
 
