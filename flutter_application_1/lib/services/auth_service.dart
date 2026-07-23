@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -7,13 +8,19 @@ import 'package:google_sign_in/google_sign_in.dart';
 /// Firebase + Google Sign-In wrapper.
 ///
 class AuthService {
+  static const String _webClientId =
+      '1001498532666-b79j2eojnjgohbqvcdg7tp80ucfomfu9.apps.googleusercontent.com';
+
   AuthService({
     FirebaseAuth? firebaseAuth,
     FirebaseFirestore? firestore,
     GoogleSignIn? googleSignIn,
   })  : _auth = firebaseAuth ?? FirebaseAuth.instance,
         _firestore = firestore ?? FirebaseFirestore.instance,
-        _googleSignIn = googleSignIn ?? GoogleSignIn();
+        _googleSignIn = googleSignIn ??
+            GoogleSignIn(
+              clientId: kIsWeb ? _webClientId : null,
+            );
 
   final FirebaseAuth _auth;
   final FirebaseFirestore _firestore;

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/auth_provider.dart';
+import '../utils/error_utils.dart';
 import 'forgot_password_screen.dart';
 import 'register_screen.dart';
 
@@ -140,7 +141,7 @@ class _LoginScreenState extends State<LoginScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
+        SnackBar(content: Text(AuthErrorUtils.parseAuthErrorMessage(e))),
       );
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -160,7 +161,7 @@ class _LoginScreenState extends State<LoginScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
+        SnackBar(content: Text(AuthErrorUtils.parseAuthErrorMessage(e))),
       );
     } finally {
       if (mounted) setState(() => _isGoogleLoading = false);
