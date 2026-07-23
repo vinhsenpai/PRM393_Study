@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import '../theme/app_theme.dart';
 
 class AdminChatScreen extends StatefulWidget {
   final String otherUser;
@@ -187,38 +188,41 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
   Widget _buildMessageInput() {
     return Container(
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 10,
-            offset: const Offset(0, -2),
+      decoration: const BoxDecoration(
+        color: AppTheme.surfaceColor,
+        border: Border(
+          top: BorderSide(
+            color: AppTheme.borderColor,
+            width: 1,
           ),
-        ],
+        ),
       ),
       child: SafeArea(
         child: Row(
           children: [
             IconButton(
-              icon: const Icon(Icons.add_circle_outline, color: Colors.blue),
+              icon: const Icon(Icons.add_circle_outline, color: AppTheme.primaryColor),
               onPressed: () {},
             ),
             Expanded(
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 decoration: BoxDecoration(
-                  color: Colors.grey[100],
+                  color: AppTheme.backgroundColor,
                   borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: AppTheme.borderColor),
                 ),
                 child: TextField(
                   controller: _messageController,
-                  style: const TextStyle(color: Colors.black87),
-                  cursorColor: Theme.of(context).primaryColor,
-                  decoration: InputDecoration(
+                  style: const TextStyle(color: AppTheme.textPrimary, fontSize: 14),
+                  cursorColor: AppTheme.primaryColor,
+                  decoration: const InputDecoration(
                     hintText: 'Type a message...',
-                    hintStyle: TextStyle(color: Colors.grey.shade600),
+                    hintStyle: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
                     border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    fillColor: Colors.transparent,
                   ),
                 ),
               ),

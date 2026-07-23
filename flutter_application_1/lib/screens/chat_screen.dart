@@ -176,37 +176,43 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Widget _buildMessageInput() {
     return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: const BoxDecoration(
+        color: AppTheme.surfaceColor,
         border: Border(
           top: BorderSide(
-            color: Colors.grey[300]!,
+            color: AppTheme.borderColor,
             width: 1,
           ),
         ),
       ),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              controller: _messageController,
-              style: const TextStyle(color: Colors.black87),
-              cursorColor: AppTheme.primaryColor,
-              decoration: InputDecoration(
-                hintText: 'Type a message...',
-                hintStyle: TextStyle(color: Colors.grey.shade600),
-                border: InputBorder.none,
+      child: SafeArea(
+        child: Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _messageController,
+                style: const TextStyle(color: AppTheme.textPrimary, fontSize: 14),
+                cursorColor: AppTheme.primaryColor,
+                decoration: const InputDecoration(
+                  hintText: 'Type a message...',
+                  hintStyle: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  fillColor: Colors.transparent,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                ),
+                onSubmitted: (value) => _sendMessage(),
               ),
-              onSubmitted: (value) => _sendMessage(),
             ),
-          ),
-          const SizedBox(width: 8),
-          IconButton(
-            icon: const Icon(Icons.send, color: AppTheme.primaryColor),
-            onPressed: _sendMessage,
-          ),
-        ],
+            const SizedBox(width: 8),
+            IconButton(
+              icon: const Icon(Icons.send, color: AppTheme.primaryColor),
+              onPressed: _sendMessage,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -215,10 +221,16 @@ class _ChatScreenState extends State<ChatScreen> {
     final text = _messageController.text;
     if (text.trim().isNotEmpty) {
       _chatService.sendMessage(
-        chatId,
-        myId,
-        myRole,
-        text,
+        chatId: chatId,
+        senderId: myId,
+        senderRole: myRole,
+        text: text,
+        buyerId: widget.buyerId,
+        buyerName: widget.buyerName,
+        sellerId: widget.sellerId,
+        sellerName: widget.sellerName,
+        productId: widget.productId,
+        productTitle: widget.productTitle,
       );
       _messageController.clear();
     }

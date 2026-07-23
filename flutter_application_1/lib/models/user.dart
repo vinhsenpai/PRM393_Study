@@ -68,5 +68,41 @@ class User {
       'updatedAt': updatedAt != null ? Timestamp.fromDate(updatedAt!) : null,
     };
   }
+
+  // Convert User to JSON map for local cache (SharedPreferences)
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'email': email,
+      'name': name,
+      'photoUrl': photoUrl ?? '',
+      'role': role.toString().split('.').last,
+      'provider': provider,
+      'emailVerified': emailVerified,
+      'createdAt': createdAt?.millisecondsSinceEpoch,
+      'updatedAt': updatedAt?.millisecondsSinceEpoch,
+    };
+  }
+
+  // Restore User from local JSON cache (SharedPreferences)
+  factory User.fromJson(Map<String, dynamic> json) {
+    return User(
+      id: json['id'] as String? ?? '',
+      email: json['email'] as String? ?? '',
+      name: json['name'] as String? ?? '',
+      photoUrl: (json['photoUrl'] as String?)?.isEmpty == true
+          ? null
+          : json['photoUrl'] as String?,
+      role: _stringToRole(json['role'] as String?),
+      provider: json['provider'] as String? ?? 'email',
+      emailVerified: json['emailVerified'] as bool? ?? false,
+      createdAt: json['createdAt'] != null
+          ? DateTime.fromMillisecondsSinceEpoch(json['createdAt'] as int)
+          : null,
+      updatedAt: json['updatedAt'] != null
+          ? DateTime.fromMillisecondsSinceEpoch(json['updatedAt'] as int)
+          : null,
+    );
+  }
 }
 
